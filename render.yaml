@@ -1,0 +1,22 @@
+databases:
+  - name: lawpilot_db
+    databaseName: lawpilot
+    user: lawpilot_user
+
+services:
+  - type: web
+    name: lawpilot
+    runtime: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn legal_management.wsgi:application
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lawpilot_db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: LOAD_INITIAL_DATA
+        value: "true"
