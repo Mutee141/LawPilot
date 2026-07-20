@@ -106,6 +106,12 @@ DATABASES = {
     )
 }
 
+# Print database status on startup for logs diagnostic
+if os.environ.get('DATABASE_URL'):
+    print("🚀 Django is connecting to PostgreSQL (DATABASE_URL is set).")
+else:
+    print("⚠️ DATABASE_URL is NOT set. Falling back to local SQLite.")
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
