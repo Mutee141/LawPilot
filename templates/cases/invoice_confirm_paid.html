@@ -1,0 +1,45 @@
+{% extends "base/base.html" %}
+
+{% block title %}Mark Invoice as Paid - Law Firm Management{% endblock %}
+{% block page_title %}Mark Invoice as Paid{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-6 offset-lg-3">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-check-circle"></i> Mark Invoice as Paid
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info" role="alert">
+                    <strong>Confirm Payment:</strong> You are about to mark this invoice as paid. The current date will be recorded as the payment date.
+                </div>
+
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <strong>Invoice:</strong> {{ invoice.invoice_number }}<br>
+                            <strong>Client:</strong> {{ invoice.client.full_name }}<br>
+                            <strong>Amount:</strong> Rs{{ invoice.amount|floatformat:2 }}<br>
+                            <strong>Current Status:</strong> <span class="badge bg-warning">Pending</span><br>
+                            <strong>Payment Date:</strong> Today ({% now "d M Y" %})
+                        </p>
+                    </div>
+                </div>
+
+                <form method="post" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check-circle"></i> Confirm Payment
+                    </button>
+                    <a href="{% url 'invoice_detail' invoice.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

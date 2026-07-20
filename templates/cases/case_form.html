@@ -1,0 +1,243 @@
+{% extends "base/base.html" %}
+
+{% block title %}{% if form.instance.id %}Edit Case{% else %}Create New Case{% endif %} - Law Firm Management{% endblock %}
+{% block page_title %}{% if form.instance.id %}Edit Case{% else %}Create New Case{% endif %}{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <a href="{% url 'case_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to Cases
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-edit"></i> {% if form.instance.id %}Edit Case{% else %}Create New Case{% endif %}
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+
+                    <!-- Display Form Errors -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger mb-3">
+                            <strong>Errors:</strong>
+                            <ul>
+                                {% for error in form.non_field_errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+
+                    <!-- Title -->
+                    <div class="mb-3">
+                        <label for="{{ form.title.id_for_label }}" class="form-label">
+                            <strong>{{ form.title.label }}</strong>
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Case Number -->
+                    <div class="mb-3">
+                        <label for="{{ form.case_number.id_for_label }}" class="form-label">
+                            <strong>{{ form.case_number.label }}</strong>
+                        </label>
+                        {{ form.case_number }}
+                        {% if form.case_number.errors %}
+                            <div class="invalid-feedback d-block">{{ form.case_number.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Case Type -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.case_type.id_for_label }}" class="form-label">
+                                <strong>{{ form.case_type.label }}</strong>
+                            </label>
+                            {{ form.case_type }}
+                            {% if form.case_type.errors %}
+                                <div class="invalid-feedback d-block">{{ form.case_type.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Priority -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">
+                                <strong>{{ form.priority.label }}</strong>
+                            </label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                                <div class="invalid-feedback d-block">{{ form.priority.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Client -->
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.client.id_for_label }}" class="form-label">
+                                <strong>{{ form.client.label }}</strong>
+                            </label>
+                            {{ form.client }}
+                            {% if form.client.errors %}
+                                <div class="invalid-feedback d-block">{{ form.client.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Filing Date -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.filing_date.id_for_label }}" class="form-label">
+                                <strong>{{ form.filing_date.label }}</strong>
+                            </label>
+                            {{ form.filing_date }}
+                            {% if form.filing_date.errors %}
+                                <div class="invalid-feedback d-block">{{ form.filing_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <!-- First Hearing Date -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_hearing_date.id_for_label }}" class="form-label">
+                                <strong>{{ form.first_hearing_date.label }}</strong>
+                            </label>
+                            {{ form.first_hearing_date }}
+                            {% if form.first_hearing_date.errors %}
+                                <div class="invalid-feedback d-block">{{ form.first_hearing_date.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Case Document -->
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.doc.id_for_label }}" class="form-label">
+                                <strong>{{ form.doc.label }}</strong>
+                            </label>
+                            {{ form.doc }}
+                            {% if form.doc.errors %}
+                                <div class="invalid-feedback d-block">{{ form.doc.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Court Information -->
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="{{ form.court.id_for_label }}" class="form-label">
+                                <strong>{{ form.court.label }}</strong>
+                            </label>
+                            {{ form.court }}
+                            {% if form.court.errors %}
+                                <div class="invalid-feedback d-block">{{ form.court.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+
+                    </div>
+
+                    <!-- Assigned Senior Lawyer -->
+                    <div class="mb-3">
+                        <label for="{{ form.assigned_senior_lawyer.id_for_label }}" class="form-label">
+                            <strong>{{ form.assigned_senior_lawyer.label }}</strong>
+                        </label>
+                        {{ form.assigned_senior_lawyer }}
+                        {% if form.assigned_senior_lawyer.errors %}
+                            <div class="invalid-feedback d-block">{{ form.assigned_senior_lawyer.errors.0 }}</div>
+                        {% endif %}
+                        <div class="form-text">Choose the lead senior lawyer for this case.</div>
+                    </div>
+
+                    <!-- Status -->
+                    <div class="mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">
+                            <strong>{{ form.status.label }}</strong>
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}
+                            <div class="invalid-feedback d-block">{{ form.status.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Description -->
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">
+                            <strong>{{ form.description.label }}</strong>
+                        </label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="invalid-feedback d-block">{{ form.description.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Form Buttons -->
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> {% if form.instance.id %}Update Case{% else %}Create Case{% endif %}
+                        </button>
+                        <a href="{% url 'case_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Help Text Sidebar -->
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-lightbulb"></i> Form Help
+            </div>
+            <div class="card-body">
+                <h6 class="fw-bold">Required Fields</h6>
+                <ul style="font-size: 13px;">
+                    <li>Case Number</li>
+                    <li>Case Type</li>
+                    <li>Status</li>
+                </ul>
+
+                <hr>
+
+                <h6 class="fw-bold">Tips</h6>
+                <ul style="font-size: 13px;">
+                    <li>Select the appropriate case type to categorize the case</li>
+                    <li>Set priority based on urgency and importance</li>
+                    <li>Link a client for better case tracking</li>
+                    <li>Fill in court information as soon as assigned</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    input[type="text"],
+    input[type="email"],
+    input[type="date"],
+    select,
+    textarea {
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+    }
+    
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="date"]:focus,
+    select:focus,
+    textarea:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(30, 60, 114, 0.25);
+    }
+</style>
+
+{% endblock %}
+

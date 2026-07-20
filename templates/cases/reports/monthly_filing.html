@@ -1,0 +1,68 @@
+{% extends "cases/reports/base_report.html" %}
+
+{% block report_title %}
+<i class="fas fa-calendar-alt" style="color: var(--emerald); margin-right: 8px;"></i> Monthly Case Filing Report
+{% endblock %}
+
+{% block export_buttons %}
+<a href="{% url 'export_report' 'monthly_filing' 'excel' %}" class="btn-export btn-export-excel">
+    <i class="fas fa-file-excel"></i> Export Excel
+</a>
+<a href="{% url 'export_report' 'monthly_filing' 'pdf' %}" class="btn-export btn-export-pdf">
+    <i class="fas fa-file-pdf"></i> Export PDF
+</a>
+{% endblock %}
+
+{% block report_body %}
+<p style="font-size: 14px; color: var(--text-soft); margin-bottom: 20px;">Shows workload and business growth grouped by
+    month.</p>
+
+{% for month, cases in monthly_cases %}
+<div
+    style="margin-bottom: 40px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; overflow: hidden;">
+    <div
+        style="padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--card); display: flex; justify-content: space-between; align-items: center;">
+        <h4 style="margin: 0; font-size: 16px; color: var(--sapphire);">{{ month }}</h4>
+        <span
+            style="font-size: 13px; font-weight: 600; background: var(--bg); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border);">
+            {{ cases|length }} Case{% if cases|length != 1 %}s{% endif %} Filed
+        </span>
+    </div>
+
+    <div style="padding: 0;">
+        <table class="report-table" style="margin-top: 0;">
+            <thead>
+                <tr>
+                    <th>Case Name / Number</th>
+                    <th>Assigned Senior</th>
+                    <th>Assigned Lawyers</th>
+                    <th>Filing Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for case in cases %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ case.title|default:"Untitled" }}</div>
+                        <div style="font-size: 12px; color: var(--text-soft);">{{ case.case_number|default:"-" }}</div>
+                    </td>
+                    <td>{{ case.assigned_senior_lawyer.get_full_name|default:"-" }}</td>
+                    <td>
+                        {% for lw in case.assigned_lawyers.all %}
+                        {{ lw.get_full_name|default:lw.username }}{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                        -
+                        {% endfor %}
+                    </td>
+                    <td>{{ case.filing_date|default:case.created_at.date }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% empty %}
+<div style="text-align: center; padding: 40px; color: var(--text-soft);">No monthly records found.</div>
+{% endfor %}
+
+{% endblock %}

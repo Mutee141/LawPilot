@@ -1,0 +1,183 @@
+{% extends 'base/dashboard_base.html' %}
+{% block title %}Court Orders - Admin Dashboard{% endblock %}
+{% block page_title %}Court Orders{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-bar { padding: 16px 22px; background: var(--card2); }
+    .modal-content { border-radius:16px; border:1.5px solid var(--border); overflow:hidden; }
+    .modal-header { background:var(--crimson-l); border-bottom:1px solid var(--border); padding:16px 22px; }
+    .modal-title { font-size:15px; font-weight:700; color:#7f1d1d; }
+    .modal-body { padding:22px; }
+    .modal-footer { padding:16px 22px; border-top:1px solid var(--border); background:var(--card2); }
+    .delete-preview { background:var(--bg); border:1.5px solid var(--border); border-radius:12px; padding:16px; margin-bottom:14px; }
+    .empty-state { padding:56px 22px; text-align:center; color:var(--text-soft); }
+    .empty-state i { font-size:40px; opacity:.13; display:block; margin-bottom:14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Court <span>Orders</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-gavel" style="color:var(--sapphire)"></i>
+            Reports &amp; management for all firm court orders
+        </div>
+    </div>
+    <a href="{% url 'case_order_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i> Create Order
+    </a>
+</div>
+
+<!-- KPI Grid -->
+<div class="kpi-grid" style="margin-bottom:20px">
+    <div class="kpi-card">
+        <div class="kpi-top"><div class="kpi-icon bl"><i class="fas fa-gavel"></i></div></div>
+        <div class="kpi-val">{{ orders.count }}</div>
+        <div class="kpi-lbl">Total Orders</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="background:var(--sapphire);width:100%"></div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top"><div class="kpi-icon gr"><i class="fas fa-calendar"></i></div></div>
+        <div class="kpi-val">{{ orders|length }}</div>
+        <div class="kpi-lbl">This Month</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="background:var(--emerald);width:70%"></div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top"><div class="kpi-icon am"><i class="fas fa-briefcase"></i></div></div>
+        <div class="kpi-val">{{ cases.count }}</div>
+        <div class="kpi-lbl">Active Cases</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="background:var(--amber);width:60%"></div></div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-top"><div class="kpi-icon cr"><i class="fas fa-users"></i></div></div>
+        <div class="kpi-val">{{ lawyers.count }}</div>
+        <div class="kpi-lbl">Active Lawyers</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="background:var(--crimson);width:50%"></div></div>
+    </div>
+</div>
+
+<!-- Filters + Table -->
+<div class="panel">
+    <div class="panel-head">
+        <div class="panel-title"><i class="fas fa-filter" style="color:var(--text-soft)"></i> Filters</div>
+        {% if selected_case or selected_type or selected_lawyer %}
+        <a href="{% url 'case_order_list_admin' %}" style="font-size:12px;color:var(--crimson);font-weight:600;text-decoration:none">
+            <i class="fas fa-times me-1"></i> Clear
+        </a>
+        {% endif %}
+    </div>
+    <div class="filter-bar">
+        <form method="get" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:12px;align-items:end">
+            <div>
+                <label class="form-label">Case</label>
+                <select name="case" id="case" class="form-select form-select-sm">
+                    <option value="">All Cases</option>
+                    {% for case in cases %}
+                    <option value="{{ case.id }}" {% if selected_case == case.id|stringformat:"s" %}selected{% endif %}>
+                        {{ case.case_number }} — {{ case.client.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Order Type</label>
+                <select name="type" id="type" class="form-select form-select-sm">
+                    <option value="">All Types</option>
+                    {% for tv, tl in order_types %}
+                    <option value="{{ tv }}" {% if selected_type == tv %}selected{% endif %}>{{ tl }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Uploaded By</label>
+                <select name="lawyer" id="lawyer" class="form-select form-select-sm">
+                    <option value="">All Lawyers</option>
+                    {% for lawyer in lawyers %}
+                    <option value="{{ lawyer.id }}" {% if selected_lawyer == lawyer.id|stringformat:"s" %}selected{% endif %}>
+                        {{ lawyer.get_full_name|default:lawyer.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search me-1"></i> Filter</button>
+            </div>
+        </form>
+    </div>
+
+    {% if orders %}
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr>
+                    <th>Order Title</th>
+                    <th>Case</th>
+                    <th>Client</th>
+                    <th style="text-align:center">Type</th>
+                    <th>Date</th>
+                    <th>Uploaded By</th>
+                    <th style="text-align:center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>
+                        <a href="{% url 'case_order_detail' order.id %}" style="font-weight:700;color:var(--text);text-decoration:none;font-size:13px">{{ order.order_title }}</a>
+                        {% if order.order_document %}<i class="fas fa-paperclip" style="color:var(--text-soft);font-size:10px;margin-left:5px"></i>{% endif %}
+                    </td>
+                    <td><a href="{% url 'case_detail' order.case.id %}" style="font-size:12px;font-weight:700;color:var(--sapphire);text-decoration:none">{{ order.case.case_number }}</a></td>
+                    <td style="font-size:12px;color:var(--text-mid)">{{ order.case.client.full_name }}</td>
+                    <td style="text-align:center">
+                        <span style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">{{ order.get_order_type_display }}</span>
+                    </td>
+                    <td style="font-size:12px;color:var(--text-mid)">{{ order.order_date|date:"M d, Y" }}</td>
+                    <td style="font-size:12px;color:var(--text-mid)">{{ order.uploaded_by.get_full_name|default:order.uploaded_by.username }}</td>
+                    <td style="text-align:center">
+                        <div style="display:flex;gap:5px;justify-content:center">
+                            <a href="{% url 'case_order_detail' order.id %}" class="btn btn-sm btn-secondary" title="View"><i class="fas fa-eye"></i></a>
+                            <a href="{% url 'case_order_edit' order.id %}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                            {% if order.order_document %}<a href="{{ order.order_document.url }}" class="btn btn-sm btn-success" title="Download" download><i class="fas fa-download"></i></a>{% endif %}
+                            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#del{{ order.id }}"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-gavel"></i>
+        <strong style="font-size:15px;color:var(--text-mid);display:block;margin-bottom:6px">No court orders found</strong>
+        <a href="{% url 'case_order_create' %}" class="btn btn-primary btn-sm mt-2"><i class="fas fa-plus me-1"></i> Create Order</a>
+    </div>
+    {% endif %}
+</div>
+
+{% for order in orders %}
+<div class="modal fade" id="del{{ order.id }}" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header"><div class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Delete Court Order</div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div class="delete-preview">
+                    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">{{ order.order_title }}</div>
+                    <div style="font-size:12px;color:var(--text-soft)">{{ order.case.case_number }} &middot; {{ order.get_order_type_display }} &middot; {{ order.order_date|date:"M d, Y" }}</div>
+                </div>
+                <div style="font-size:13px;color:var(--text-mid)">This action <strong>cannot be undone</strong>.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'case_order_delete' order.id %}" method="post" class="d-inline">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i> Delete</button></form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}
+{% block extra_js %}<script>document.getElementById('case').addEventListener('change',function(){this.form.submit();});</script>{% endblock %}

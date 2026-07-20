@@ -1,0 +1,110 @@
+{% extends 'base/dashboard_base.html' %}
+{% block title %}Court Orders - Junior Lawyer{% endblock %}
+{% block page_title %}Court Orders{% endblock %}
+
+{% block extra_css %}
+<style>
+    .filter-bar { padding: 16px 22px; background: var(--card2); }
+    .empty-state { padding:56px 22px; text-align:center; color:var(--text-soft); }
+    .empty-state i { font-size:40px; opacity:.13; display:block; margin-bottom:14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Court <span>Orders</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-info-circle" style="color:var(--amber)"></i>
+            Limited to your assigned cases
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <div class="panel-title"><i class="fas fa-filter" style="color:var(--text-soft)"></i> Filters</div>
+        {% if selected_case or selected_type %}
+        <a href="{% url 'case_order_list_junior' %}" style="font-size:12px;color:var(--crimson);font-weight:600;text-decoration:none">
+            <i class="fas fa-times me-1"></i> Clear
+        </a>
+        {% endif %}
+    </div>
+    <div class="filter-bar">
+        <form method="get" style="display:grid;grid-template-columns:1fr 1fr auto;gap:12px;align-items:end">
+            <div>
+                <label class="form-label">Case</label>
+                <select name="case" id="case" class="form-select form-select-sm">
+                    <option value="">All Assigned Cases</option>
+                    {% for case in cases %}
+                    <option value="{{ case.id }}" {% if selected_case == case.id|stringformat:"s" %}selected{% endif %}>
+                        {{ case.case_number }} — {{ case.client.full_name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="form-label">Order Type</label>
+                <select name="type" id="type" class="form-select form-select-sm">
+                    <option value="">All Types</option>
+                    {% for tv, tl in order_types %}
+                    <option value="{{ tv }}" {% if selected_type == tv %}selected{% endif %}>{{ tl }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div><button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-search me-1"></i> Filter</button></div>
+        </form>
+    </div>
+
+    {% if orders %}
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr>
+                    <th>Order Title</th>
+                    <th>Case</th>
+                    <th style="text-align:center">Type</th>
+                    <th>Date</th>
+                    <th>Uploaded By</th>
+                    <th style="text-align:center">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>
+                        <a href="{% url 'case_order_detail' order.id %}" style="font-weight:700;color:var(--text);text-decoration:none;font-size:13px">{{ order.order_title }}</a>
+                        {% if order.order_document %}<i class="fas fa-paperclip" style="color:var(--text-soft);font-size:10px;margin-left:5px"></i>{% endif %}
+                    </td>
+                    <td>
+                        <a href="{% url 'case_detail' order.case.id %}" style="font-size:12px;font-weight:700;color:var(--sapphire);text-decoration:none">{{ order.case.case_number }}</a>
+                        <div style="font-size:11px;color:var(--text-soft)">{{ order.case.client.full_name }}</div>
+                    </td>
+                    <td style="text-align:center">
+                        <span style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">{{ order.get_order_type_display }}</span>
+                    </td>
+                    <td style="font-size:12px;color:var(--text-mid)">{{ order.order_date|date:"M d, Y" }}</td>
+                    <td style="font-size:12px;color:var(--text-mid)">{{ order.uploaded_by.get_full_name|default:order.uploaded_by.username }}</td>
+                    <td style="text-align:center">
+                        <div style="display:flex;gap:5px;justify-content:center">
+                            <a href="{% url 'case_order_detail' order.id %}" class="btn btn-sm btn-secondary"><i class="fas fa-eye"></i></a>
+                            {% if order.order_document %}<a href="{{ order.order_document.url }}" class="btn btn-sm btn-success" download><i class="fas fa-download"></i></a>{% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-gavel"></i>
+        <strong style="font-size:15px;color:var(--text-mid);display:block;margin-bottom:6px">No court orders found</strong>
+        <p style="font-size:13px">You don't have any court orders for your assigned cases.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+{% block extra_js %}<script>document.getElementById('case').addEventListener('change',function(){this.form.submit();});</script>{% endblock %}

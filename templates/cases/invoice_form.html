@@ -1,0 +1,195 @@
+{% extends "base/dashboard_base.html" %}
+{% block title %}{% if form.instance.pk %}Edit Invoice{% else %}Create Invoice{% endif %} - Law Firm Management{% endblock %}
+{% block page_title %}{% if form.instance.pk %}Edit Invoice{% else %}Create New Invoice{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section { padding: 22px; border-bottom: 1px solid var(--border); }
+    .form-section:last-child { border-bottom: none; }
+    .form-section-title {
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 1.5px; color: var(--text-soft);
+        margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .form-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .field-group { margin-bottom: 16px; }
+    .field-group:last-child { margin-bottom: 0; }
+    .field-error { background:var(--crimson-l); color:#7f1d1d; padding:7px 12px; border-radius:8px; margin-top:5px; font-size:12px; border-left:3px solid var(--crimson); }
+    .field-hint { font-size:11px; color:var(--text-soft); margin-top:5px; }
+    .tip-item { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:12px; color:var(--text-mid); }
+    .tip-item:last-child { border-bottom:none; padding-bottom:0; }
+    .tip-dot { width:7px; height:7px; border-radius:50%; background:var(--crimson); margin-top:4px; flex-shrink:0; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>{% if form.instance.pk %}Edit <span>Invoice</span>{% else %}Create New <span>Invoice</span>{% endif %}</h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-file-invoice-dollar" style="color:var(--sapphire)"></i>
+            {% if form.instance.pk %}Update the invoice details below{% else %}Fill in the details to generate a new invoice{% endif %}
+        </div>
+    </div>
+    <a href="{% url 'invoice_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Invoices
+    </a>
+</div>
+
+{% if form.non_field_errors %}
+<div class="alert alert-danger mb-4">
+    <strong><i class="fas fa-exclamation-circle me-1"></i> Please fix the following:</strong>
+    <ul style="margin:8px 0 0 16px;padding:0">
+        {% for error in form.non_field_errors %}<li style="font-size:13px">{{ error }}</li>{% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 300px;gap:20px">
+
+    <!-- LEFT: Form -->
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <i class="fas fa-file-invoice" style="color:var(--sapphire)"></i>
+                Invoice Details
+            </div>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <!-- Client & Case -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-users"></i> Client &amp; Case</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="field-group">
+                        <label for="{{ form.client.id_for_label }}" class="form-label">
+                            Client <span style="color:var(--crimson)">*</span>
+                        </label>
+                        {{ form.client }}
+                        {% if form.client.errors %}<div class="field-error">{{ form.client.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.case.id_for_label }}" class="form-label">
+                            Case <span style="font-weight:400;color:var(--text-soft)">(optional)</span>
+                        </label>
+                        {{ form.case }}
+                        {% if form.case.errors %}<div class="field-error">{{ form.case.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Info -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-hashtag"></i> Invoice Info</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="field-group">
+                        <label for="{{ form.invoice_number.id_for_label }}" class="form-label">
+                            Invoice Number <span style="color:var(--crimson)">*</span>
+                        </label>
+                        {{ form.invoice_number }}
+                        {% if form.invoice_number.errors %}<div class="field-error">{{ form.invoice_number.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.amount.id_for_label }}" class="form-label">
+                            Amount (₨) <span style="color:var(--crimson)">*</span>
+                        </label>
+                        {{ form.amount }}
+                        {% if form.amount.errors %}<div class="field-error">{{ form.amount.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                    {{ form.description }}
+                    <div class="field-hint">Describe the services provided or work completed.</div>
+                    {% if form.description.errors %}<div class="field-error">{{ form.description.errors.0 }}</div>{% endif %}
+                </div>
+            </div>
+
+            <!-- Dates & Status -->
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-calendar"></i> Dates &amp; Status</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px">
+                    <div class="field-group">
+                        <label for="{{ form.due_date.id_for_label }}" class="form-label">
+                            Due Date <span style="color:var(--crimson)">*</span>
+                        </label>
+                        {{ form.due_date }}
+                        {% if form.due_date.errors %}<div class="field-error">{{ form.due_date.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">
+                            Status <span style="color:var(--crimson)">*</span>
+                        </label>
+                        {{ form.status }}
+                        {% if form.status.errors %}<div class="field-error">{{ form.status.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.paid_date.id_for_label }}" class="form-label">
+                            Paid Date <span style="font-weight:400;color:var(--text-soft)">(optional)</span>
+                        </label>
+                        {{ form.paid_date }}
+                        <div class="field-hint">Set when marked as paid.</div>
+                        {% if form.paid_date.errors %}<div class="field-error">{{ form.paid_date.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit bar -->
+            <div style="padding:18px 22px;display:flex;gap:10px;background:var(--card2);border-top:1px solid var(--border)">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
+                    {% if form.instance.pk %}Update Invoice{% else %}Create Invoice{% endif %}
+                </button>
+                <a href="{% url 'invoice_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- RIGHT: Tips -->
+    <div style="display:flex;flex-direction:column;gap:16px;align-self:start">
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-lightbulb" style="color:var(--amber)"></i> Invoice Tips</div>
+            </div>
+            <div style="padding:16px 22px">
+                <div class="tip-item"><div class="tip-dot"></div><div>Use unique invoice numbers for easy tracking</div></div>
+                <div class="tip-item"><div class="tip-dot"></div><div>Always specify a clear due date</div></div>
+                <div class="tip-item"><div class="tip-dot"></div><div>Link to the case for better organisation</div></div>
+                <div class="tip-item"><div class="tip-dot"></div><div>Save as <strong>Draft</strong> first if unsure</div></div>
+                <div class="tip-item"><div class="tip-dot"></div><div>Set the paid date once payment is received</div></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-circle-info" style="color:var(--sapphire)"></i> Status Guide</div>
+            </div>
+            <div style="padding:16px 22px;display:flex;flex-direction:column;gap:10px">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="background:#f1f5f9;color:#475569;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Draft</span>
+                    <span style="font-size:12px;color:var(--text-soft)">Not yet sent to client</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="background:var(--amber-l);color:var(--amber);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Pending</span>
+                    <span style="font-size:12px;color:var(--text-soft)">Awaiting payment</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="background:var(--emerald-l);color:#065f46;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Paid</span>
+                    <span style="font-size:12px;color:var(--text-soft)">Payment received</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px">
+                    <span style="background:var(--crimson-l);color:#7f1d1d;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Overdue</span>
+                    <span style="font-size:12px;color:var(--text-soft)">Past due date, unpaid</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

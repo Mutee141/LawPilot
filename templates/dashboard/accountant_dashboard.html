@@ -1,0 +1,358 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}Accountant Dashboard — Juridex{% endblock %}
+{% block page_title %}Billing &amp; Accounting{% endblock %}
+
+{% block content %}
+
+<!-- ── PAGE HEADER ── -->
+<div class="page-header">
+    <div>
+        <h3>Billing &amp; <span>Accounting</span></h3>
+        <p style="font-size:13px;color:var(--text-soft);margin-top:4px">
+            <i class="fas fa-calculator" style="color:var(--emerald);margin-right:5px"></i>
+            Financial summary, invoices &amp; client payment tracking
+        </p>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a href="{% url 'invoice_create' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus me-1"></i> New Invoice
+        </a>
+        <a href="#" class="btn btn-secondary btn-sm">
+            <i class="fas fa-download me-1"></i> Export
+        </a>
+    </div>
+</div>
+
+<!-- ── FINANCIAL KPI CARDS ── -->
+<div class="kpi-grid" style="margin-bottom:20px">
+    <div class="kpi-card" style="border-left:4px solid var(--sapphire)">
+        <div class="kpi-top">
+            <div class="kpi-icon bl"><i class="fas fa-receipt"></i></div>
+            <span class="kpi-trend up">All time</span>
+        </div>
+        <div class="kpi-val" style="color:var(--sapphire)">Rs{{ total_invoiced|default:'0' }}</div>
+        <div class="kpi-lbl">Total Invoiced</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:85%;background:var(--sapphire)"></div></div>
+    </div>
+
+    <div class="kpi-card" style="border-left:4px solid var(--emerald)">
+        <div class="kpi-top">
+            <div class="kpi-icon gr"><i class="fas fa-circle-check"></i></div>
+            <span class="kpi-trend up">Collected</span>
+        </div>
+        <div class="kpi-val" style="color:var(--emerald)">Rs{{ collected|default:'0' }}</div>
+        <div class="kpi-lbl">Revenue Collected</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:72%;background:var(--emerald)"></div></div>
+    </div>
+
+    <div class="kpi-card" style="border-left:4px solid var(--amber)">
+        <div class="kpi-top">
+            <div class="kpi-icon am"><i class="fas fa-hourglass-half"></i></div>
+            <span class="kpi-trend down">Awaiting</span>
+        </div>
+        <div class="kpi-val" style="color:var(--amber)">Rs{{ outstanding|default:'0' }}</div>
+        <div class="kpi-lbl">Outstanding</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:40%;background:var(--amber)"></div></div>
+    </div>
+
+    <div class="kpi-card" style="border-left:4px solid var(--violet)">
+        <div class="kpi-top">
+            <div class="kpi-icon" style="background:var(--violet-l);color:var(--violet)"><i class="fas fa-file-invoice"></i></div>
+            <span class="kpi-trend up">Generated</span>
+        </div>
+        <div class="kpi-val" style="color:var(--violet)">{{ total_invoices|default:'0' }}</div>
+        <div class="kpi-lbl">Total Invoices</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:65%;background:var(--violet)"></div></div>
+    </div>
+</div>
+
+<!-- ── QUICK ACTIONS ── -->
+<div class="panel" style="margin-bottom:20px">
+    <div class="panel-head">
+        <div class="panel-title"><i class="fas fa-bolt" style="color:var(--amber)"></i> Quick Actions</div>
+    </div>
+    <div class="quick-actions">
+        <a href="{% url 'invoice_list' %}" class="qa-btn blue"><i class="fas fa-list"></i> All Invoices</a>
+        <a href="{% url 'invoice_create' %}" class="qa-btn green"><i class="fas fa-plus"></i> Create Invoice</a>
+        <a href="#" class="qa-btn amber"><i class="fas fa-download"></i> Export Report</a>
+        <a href="{% url 'client_list' %}" class="qa-btn red"><i class="fas fa-users"></i> Clients</a>
+    </div>
+</div>
+
+<!-- ── INVOICE STATUS OVERVIEW ── -->
+<div class="grid-3" style="margin-bottom:20px">
+    <!-- Paid -->
+    <div class="panel">
+        <div style="padding:20px;background:linear-gradient(135deg,#064e3b,#065f46)">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:6px">
+                <i class="fas fa-circle-check me-1"></i> Paid Invoices
+            </div>
+            <div style="font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:#fff;line-height:1">
+                {{ paid_invoices|default:'0' }}
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:6px">Fully cleared</div>
+        </div>
+        <div style="padding:14px 20px">
+            <div class="progress-item" style="margin:0">
+                <div class="progress-label">
+                    <span class="progress-name">Collection Rate</span>
+                    <span class="progress-pct">
+                        {% if total_invoices %}
+                            {% widthratio paid_invoices total_invoices 100 %}%
+                        {% else %}0%{% endif %}
+                    </span>
+                </div>
+                <div class="progress-bar-wrap">
+                    <div class="progress-fill" style="
+                        background:linear-gradient(90deg,var(--emerald),#34d399);
+                        width:{% if total_invoices %}{% widthratio paid_invoices total_invoices 100 %}%{% else %}0%{% endif %}
+                    "></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending -->
+    <div class="panel">
+        <div style="padding:20px;background:linear-gradient(135deg,#78350f,#92400e)">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:6px">
+                <i class="fas fa-hourglass-half me-1"></i> Pending Invoices
+            </div>
+            <div style="font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:#fff;line-height:1">
+                {{ pending_invoices|default:'0' }}
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:6px">Awaiting payment</div>
+        </div>
+        <div style="padding:14px 20px">
+            <div class="progress-item" style="margin:0">
+                <div class="progress-label">
+                    <span class="progress-name">Of Total</span>
+                    <span class="progress-pct">
+                        {% if total_invoices %}
+                            {% widthratio pending_invoices total_invoices 100 %}%
+                        {% else %}0%{% endif %}
+                    </span>
+                </div>
+                <div class="progress-bar-wrap">
+                    <div class="progress-fill" style="
+                        background:linear-gradient(90deg,var(--amber),#fbbf24);
+                        width:{% if total_invoices %}{% widthratio pending_invoices total_invoices 100 %}%{% else %}0%{% endif %}
+                    "></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Overdue -->
+    <div class="panel">
+        <div style="padding:20px;background:linear-gradient(135deg,#7f1d1d,#991b1b)">
+            <div style="font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.55);margin-bottom:6px">
+                <i class="fas fa-circle-exclamation me-1"></i> Overdue Invoices
+            </div>
+            <div style="font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:#fff;line-height:1">
+                {{ overdue_invoices|default:'0' }}
+            </div>
+            <div style="font-size:12px;color:rgba(255,255,255,.4);margin-top:6px">Require follow-up</div>
+        </div>
+        <div style="padding:14px 20px">
+            <div class="progress-item" style="margin:0">
+                <div class="progress-label">
+                    <span class="progress-name">Overdue Rate</span>
+                    <span class="progress-pct" style="color:var(--crimson)">
+                        {% if total_invoices %}
+                            {% widthratio overdue_invoices total_invoices 100 %}%
+                        {% else %}0%{% endif %}
+                    </span>
+                </div>
+                <div class="progress-bar-wrap">
+                    <div class="progress-fill" style="
+                        background:linear-gradient(90deg,var(--crimson),#f87171);
+                        width:{% if total_invoices %}{% widthratio overdue_invoices total_invoices 100 %}%{% else %}0%{% endif %}
+                    "></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── INVOICES + CLIENT PAYMENTS ── -->
+<div class="grid-2" style="margin-bottom:20px">
+
+    <!-- Recent Invoices -->
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <i class="fas fa-clock-rotate-left" style="color:var(--sapphire)"></i>
+                Recent Invoices
+            </div>
+            <a href="{% url 'invoice_list' %}" class="panel-link">View all →</a>
+        </div>
+        <div style="overflow-x:auto;max-height:380px;overflow-y:auto">
+            <table style="width:100%;border-collapse:collapse">
+                <thead>
+                    <tr>
+                        <th style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-soft);padding:10px 22px;text-align:left;background:var(--card2);border-bottom:1px solid var(--border);position:sticky;top:0">Invoice #</th>
+                        <th style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-soft);padding:10px 14px;text-align:left;background:var(--card2);border-bottom:1px solid var(--border);position:sticky;top:0">Client</th>
+                        <th style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-soft);padding:10px 14px;text-align:right;background:var(--card2);border-bottom:1px solid var(--border);position:sticky;top:0">Amount</th>
+                        <th style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-soft);padding:10px 14px;text-align:center;background:var(--card2);border-bottom:1px solid var(--border);position:sticky;top:0">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in recent_invoices %}
+                    <tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='#fafbff'" onmouseout="this.style.background=''">
+                        <td style="padding:12px 22px">
+                            <span style="font-size:12px;font-weight:700;color:var(--accent2);background:var(--sapphire-l);padding:3px 8px;border-radius:6px">
+                                #{{ invoice.id }}
+                            </span>
+                        </td>
+                        <td style="padding:12px 14px;font-size:13px;font-weight:500;color:var(--text)">
+                            {{ invoice.client.full_name|truncatewords:2 }}
+                        </td>
+                        <td style="padding:12px 14px;text-align:right">
+                            <span style="font-size:13px;font-weight:700;font-family:'Playfair Display',serif;color:var(--text)">
+                                Rs{{ invoice.amount }}
+                            </span>
+                        </td>
+                        <td style="padding:12px 14px;text-align:center">
+                            {% if invoice.status == 'paid' %}
+                                <span class="status-pill active">Paid</span>
+                            {% elif invoice.status == 'pending' %}
+                                <span class="status-pill pending">Pending</span>
+                            {% else %}
+                                <span class="status-pill urgent">Overdue</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="padding:24px;text-align:center;color:var(--text-soft)">No invoices found</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Revenue Chart (visual breakdown) -->
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <i class="fas fa-chart-pie" style="color:var(--amber)"></i>
+                Revenue Breakdown
+            </div>
+        </div>
+        <div style="padding:24px">
+            <!-- Visual revenue bars -->
+            <div class="progress-section" style="padding:0">
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span class="progress-name"><i class="fas fa-circle" style="color:var(--emerald);margin-right:6px;font-size:9px"></i>Collected</span>
+                        <span class="progress-pct" style="color:var(--emerald)">Rs{{ collected|default:'0' }}</span>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-fill" style="background:linear-gradient(90deg,var(--emerald),#34d399);width:{% if total_invoiced %}{% widthratio collected total_invoiced 100 %}%{% else %}0%{% endif %}"></div>
+                    </div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label">
+                        <span class="progress-name"><i class="fas fa-circle" style="color:var(--amber);margin-right:6px;font-size:9px"></i>Outstanding</span>
+                        <span class="progress-pct" style="color:var(--amber)">Rs{{ outstanding|default:'0' }}</span>
+                    </div>
+                    <div class="progress-bar-wrap">
+                        <div class="progress-fill" style="background:linear-gradient(90deg,var(--amber),#fbbf24);width:{% if total_invoiced %}{% widthratio outstanding total_invoiced 100 %}%{% else %}0%{% endif %}"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary boxes -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px">
+                <div style="background:var(--emerald-l);border:1px solid #a7f3d0;border-radius:12px;padding:16px;text-align:center">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--emerald);margin-bottom:6px">Paid</div>
+                    <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:#065f46">{{ paid_invoices|default:'0' }}</div>
+                    <div style="font-size:11px;color:#059669;margin-top:2px">invoices</div>
+                </div>
+                <div style="background:var(--amber-l);border:1px solid #fde68a;border-radius:12px;padding:16px;text-align:center">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--amber);margin-bottom:6px">Pending</div>
+                    <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:#78350f">{{ pending_invoices|default:'0' }}</div>
+                    <div style="font-size:11px;color:var(--amber);margin-top:2px">invoices</div>
+                </div>
+                <div style="background:var(--crimson-l);border:1px solid #fecaca;border-radius:12px;padding:16px;text-align:center">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--crimson);margin-bottom:6px">Overdue</div>
+                    <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:#7f1d1d">{{ overdue_invoices|default:'0' }}</div>
+                    <div style="font-size:11px;color:var(--crimson);margin-top:2px">invoices</div>
+                </div>
+                <div style="background:var(--sapphire-l);border:1px solid #bfdbfe;border-radius:12px;padding:16px;text-align:center">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--sapphire);margin-bottom:6px">Total</div>
+                    <div style="font-family:'Playfair Display',serif;font-size:26px;font-weight:900;color:#1e3a8a">{{ total_invoices|default:'0' }}</div>
+                    <div style="font-size:11px;color:var(--sapphire);margin-top:2px">invoices</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── CLIENT OUTSTANDING PAYMENTS ── -->
+<div class="panel">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-users" style="color:var(--violet)"></i>
+            Outstanding Payments by Client
+        </div>
+        <a href="{% url 'client_list' %}" class="panel-link">View clients →</a>
+    </div>
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr>
+                    <th style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-soft);padding:11px 22px;text-align:left;background:var(--card2);border-bottom:1px solid var(--border)">Client</th>
+                    <th style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-soft);padding:11px 14px;text-align:right;background:var(--card2);border-bottom:1px solid var(--border)">Total Invoiced</th>
+                    <th style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-soft);padding:11px 14px;text-align:right;background:var(--card2);border-bottom:1px solid var(--border)">Paid</th>
+                    <th style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-soft);padding:11px 14px;text-align:right;background:var(--card2);border-bottom:1px solid var(--border)">Outstanding</th>
+                    <th style="font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-soft);padding:11px 14px;text-align:center;background:var(--card2);border-bottom:1px solid var(--border)">Days Overdue</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in client_payments %}
+                <tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='#fafbff'" onmouseout="this.style.background=''">
+                    <td style="padding:13px 22px">
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0">
+                                {{ client.name|first|upper }}
+                            </div>
+                            <span style="font-size:13px;font-weight:600;color:var(--text)">{{ client.name }}</span>
+                        </div>
+                    </td>
+                    <td style="padding:13px 14px;text-align:right;font-size:13px;font-weight:600;color:var(--text)">Rs{{ client.total_invoiced }}</td>
+                    <td style="padding:13px 14px;text-align:right">
+                        <span style="font-size:12px;font-weight:700;color:var(--emerald);background:var(--emerald-l);padding:4px 10px;border-radius:20px">Rs{{ client.paid }}</span>
+                    </td>
+                    <td style="padding:13px 14px;text-align:right">
+                        <span style="font-size:12px;font-weight:700;color:{% if client.outstanding > 0 %}var(--amber){% else %}var(--emerald){% endif %};background:{% if client.outstanding > 0 %}var(--amber-l){% else %}var(--emerald-l){% endif %};padding:4px 10px;border-radius:20px">
+                            Rs{{ client.outstanding }}
+                        </span>
+                    </td>
+                    <td style="padding:13px 14px;text-align:center">
+                        {% if client.days_overdue %}
+                        <span style="font-size:12px;font-weight:700;color:var(--crimson);background:var(--crimson-l);padding:4px 10px;border-radius:20px">
+                            {{ client.days_overdue }}d
+                        </span>
+                        {% else %}
+                        <span style="font-size:12px;color:var(--text-soft)">—</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding:24px;text-align:center;color:var(--text-soft)">
+                        <i class="fas fa-users" style="font-size:24px;opacity:.3;display:block;margin-bottom:8px"></i>
+                        No client payment data available
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

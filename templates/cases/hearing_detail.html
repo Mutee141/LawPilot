@@ -1,0 +1,254 @@
+{% extends "base/dashboard_base.html" %}
+{% block title %}Hearing Details - Law Firm Management{% endblock %}
+{% block page_title %}Hearing Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .detail-label {
+        font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
+        text-transform: uppercase; color: var(--text-soft);
+        margin-bottom: 6px;
+    }
+    .detail-value {
+        font-size: 14px; color: var(--text); font-weight: 500;
+        line-height: 1.6;
+    }
+    .detail-value.muted { color: var(--text-soft); font-style: italic; font-weight: 400; }
+    .detail-block { margin-bottom: 22px; }
+    .detail-block:last-child { margin-bottom: 0; }
+
+    .info-grid {
+        display: grid; grid-template-columns: 1fr 1fr;
+        gap: 0;
+    }
+    .info-cell {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+    }
+    .info-cell:nth-child(even) { border-right: none; }
+    .info-cell:nth-last-child(-n+2) { border-bottom: none; }
+
+    .outcome-block {
+        padding: 18px 22px;
+        border-bottom: 1px solid var(--border);
+    }
+    .outcome-block:last-child { border-bottom: none; }
+
+    .order-card {
+        background: var(--bg); border: 1.5px solid var(--border);
+        border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    }
+    .order-card:last-child { margin-bottom: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════ PAGE HEADER ══════════════════════ -->
+<div class="page-header">
+    <div>
+        <h3>Hearing <span>{{ hearing.case.case_number }}</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-calendar" style="color:var(--sapphire)"></i>
+            {{ hearing.hearing_date|date:"l, d M Y" }} at {{ hearing.hearing_date|time:"H:i" }}
+        </div>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a href="{% url 'hearing_edit' hearing.id %}" class="btn btn-warning btn-sm">
+            <i class="fas fa-edit me-1"></i> Edit
+        </a>
+        <a href="{% url 'hearing_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Back to Hearings
+        </a>
+    </div>
+</div>
+
+<!-- ══════════════════════ MAIN GRID ══════════════════════ -->
+<div class="grid-2-1">
+
+    <!-- LEFT: Hearing Details -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- Core Details -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-clipboard-list" style="color:var(--sapphire)"></i>
+                    Hearing Details
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-cell">
+                    <div class="detail-label">Hearing Date & Time</div>
+                    <div class="detail-value">{{ hearing.hearing_date|date:"M d, Y" }}</div>
+                    <div style="font-size:12px;color:var(--text-soft);margin-top:2px">
+                        <i class="fas fa-clock" style="font-size:10px;margin-right:3px"></i>{{ hearing.hearing_date|time:"H:i" }}
+                    </div>
+                </div>
+                <div class="info-cell">
+                    <div class="detail-label">Court</div>
+                    <div class="detail-value">{{ hearing.case.court.name|default:"—" }}</div>
+                </div>
+                {% if hearing.attended_by %}
+                <div class="info-cell">
+                    <div class="detail-label">Attended By</div>
+                    <div class="detail-value">
+                        {{ hearing.attended_by.get_full_name|default:hearing.attended_by.username|default:"—" }}
+                    </div>
+                </div>
+                {% endif %}
+                <div class="info-cell" style="grid-column:1/-1;border-right:none">
+                    <div class="detail-label">Next Hearing Date</div>
+                    {% if hearing.next_hearing_date %}
+                    <div class="detail-value">
+                        <span style="background:var(--sapphire-l);color:var(--sapphire);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px">
+                            <i class="fas fa-calendar-plus me-1"></i>{{ hearing.next_hearing_date|date:"M d, Y H:i" }}
+                        </span>
+                    </div>
+                    {% else %}
+                    <div class="detail-value muted">Not scheduled</div>
+                    {% endif %}
+                </div>
+                {% if hearing.document %}
+                <div class="info-cell" style="grid-column:1/-1;border-right:none;border-top:1px solid var(--border)">
+                    <div class="detail-label">Related Document</div>
+                    <div class="detail-value">
+                        <a href="{{ hearing.document.url }}" target="_blank" class="btn btn-sm btn-secondary">
+                            <i class="fas fa-download me-1"></i> Download Document
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Outcomes & Remarks -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-file-lines" style="color:var(--violet)"></i>
+                    Outcomes & Remarks
+                </div>
+            </div>
+
+            <div class="outcome-block">
+                <div class="detail-label">Hearing Outcome</div>
+                <div class="detail-value">
+                    {% if hearing.hearing_outcome %}
+                        {{ hearing.hearing_outcome|linebreaks }}
+                    {% else %}
+                        <span class="muted">No outcome recorded</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="outcome-block">
+                <div class="detail-label">Court Remarks</div>
+                <div class="detail-value">
+                    {% if hearing.court_remarks %}
+                        {{ hearing.court_remarks|linebreaks }}
+                    {% else %}
+                        <span style="color:var(--text-soft);font-style:italic;font-size:13px">No remarks recorded</span>
+                    {% endif %}
+                </div>
+            </div>
+
+
+            {% if hearing.adjournment_reason %}
+            <div class="outcome-block" style="background:#fffbeb">
+                <div class="detail-label" style="color:var(--amber)">Adjournment Reason</div>
+                <div class="detail-value">
+                    <span style="background:var(--amber-l);border:1px solid #fde68a;border-radius:10px;padding:10px 14px;display:block;font-size:13px;color:#78350f">
+                        <i class="fas fa-exclamation-triangle me-2" style="color:var(--amber)"></i>
+                        {{ hearing.adjournment_reason }}
+                    </span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Related Case -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-briefcase" style="color:var(--accent2)"></i>
+                    Related Case
+                </div>
+            </div>
+            <div style="padding:18px 22px">
+                <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">
+                    {{ hearing.case.case_number }}
+                </div>
+                <div style="font-size:13px;color:var(--text-soft);margin-bottom:16px">
+                    <i class="fas fa-user" style="font-size:10px;margin-right:4px"></i>
+                    {{ hearing.case.client.full_name|default:"No Client" }}
+                </div>
+                <a href="{% url 'case_detail' hearing.case.id %}" class="btn btn-secondary btn-sm w-100">
+                    <i class="fas fa-eye me-1"></i> View Full Case
+                </a>
+            </div>
+        </div>
+
+        <!-- Related Orders -->
+        {% if hearing.orders.all %}
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-file-contract" style="color:var(--emerald)"></i>
+                    Related Orders
+                    <span style="background:var(--bg);border:1px solid var(--border);color:var(--text-mid);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">
+                        {{ hearing.orders.count }}
+                    </span>
+                </div>
+            </div>
+            <div style="padding:14px">
+                {% for order in hearing.orders.all %}
+                <div class="order-card">
+                    <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px">
+                        {{ order.get_order_type_display }}
+                    </div>
+                    <div style="font-size:11px;color:var(--text-soft);margin-bottom:10px">
+                        <i class="fas fa-calendar" style="font-size:9px;margin-right:3px"></i>
+                        {{ order.order_date|date:"M d, Y" }}
+                    </div>
+                    {% if order.order_document %}
+                    <a href="{{ order.order_document.url }}" target="_blank" class="btn btn-sm btn-secondary w-100">
+                        <i class="fas fa-download me-1"></i> Download Document
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Quick Actions -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-bolt" style="color:var(--amber)"></i>
+                    Quick Actions
+                </div>
+            </div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+                <a href="{% url 'hearing_edit' hearing.id %}" class="btn btn-warning btn-sm w-100">
+                    <i class="fas fa-edit me-1"></i> Edit This Hearing
+                </a>
+                <a href="{% url 'hearing_list' %}" class="btn btn-secondary btn-sm w-100">
+                    <i class="fas fa-list me-1"></i> All Hearings
+                </a>
+                <a href="{% url 'case_detail' hearing.case.id %}" class="btn btn-secondary btn-sm w-100">
+                    <i class="fas fa-briefcase me-1"></i> Go to Case
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

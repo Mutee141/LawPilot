@@ -1,0 +1,244 @@
+{% extends "base/dashboard_base.html" %}
+{% block title %}{% if form.instance.id %}Edit Client{% else %}Add New Client{% endif %} - Law Firm Management{% endblock %}
+{% block page_title %}{% if form.instance.id %}Edit Client{% else %}Add New Client{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        padding: 24px;
+        border-bottom: 1px solid var(--border);
+    }
+    .form-section:last-child { border-bottom: none; }
+    .form-section-title {
+        font-size: 12px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 1.8px; color: var(--text-soft);
+        margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+    }
+    .form-section-title i {
+        color: var(--crimson);
+        font-size: 14px;
+    }
+    .form-section-title::after {
+        content: ''; flex: 1; height: 1px; background: linear-gradient(to right, var(--border), transparent);
+    }
+    .field-group { margin-bottom: 20px; }
+    .field-group:last-child { margin-bottom: 0; }
+    .field-error {
+        font-size: 11px; color: var(--crimson); margin-top: 5px;
+        display: flex; align-items: center; gap: 5px;
+    }
+    .portal-access-box {
+        background: rgba(255, 107, 0, 0.03);
+        border: 1px dashed var(--crimson);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════ PAGE HEADER ══════════════════════ -->
+<div class="page-header">
+    <div>
+        <h3>{% if form.instance.id %}Edit <span>Client</span>{% else %}Add New <span>Client</span>{% endif %}</h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-user-plus" style="color:var(--crimson)"></i>
+            {% if form.instance.id %}Modify existing client details{% else %}Onboard a new client with portal access{% endif %}
+        </div>
+    </div>
+    <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Back to List
+    </a>
+</div>
+
+<!-- ══════════════════════ FORM GRID ══════════════════════ -->
+<div style="display:grid;grid-template-columns:1fr 340px;gap:24px">
+
+    <!-- LEFT: Main Form -->
+    <div class="panel">
+        <div class="panel-head" style="background: var(--card2);">
+            <div class="panel-title" style="font-size: 16px;">
+                <i class="fas fa-clipboard-list" style="color:var(--crimson)"></i>
+                Client Profile Details
+            </div>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+            <div style="margin:20px 24px 0">
+                <div class="alert alert-danger">
+                    <strong><i class="fas fa-exclamation-triangle me-1"></i> Action Required:</strong>
+                    <ul style="margin:8px 0 0 16px;padding:0">
+                        {% for error in form.non_field_errors %}
+                        <li style="font-size:13px">{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Section 1: Personal Information -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-user-tag"></i> Personal Information
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <div class="field-group">
+                        <label for="{{ form.full_name.id_for_label }}" class="form-label">Full Name <span style="color:var(--crimson)">*</span></label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                        <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.full_name.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.cnic_id.id_for_label }}" class="form-label">CNIC / Identity No. <span style="color:var(--crimson)">*</span></label>
+                        {{ form.cnic_id }}
+                        {% if form.cnic_id.errors %}
+                        <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.cnic_id.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 2: Contact Details -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-address-book"></i> Contact Details
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                    <div class="field-group">
+                        <label for="{{ form.phone.id_for_label }}" class="form-label">Phone Number <span style="color:var(--crimson)">*</span></label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.phone.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.email.id_for_label }}" class="form-label">Email Address <span style="color:var(--text-soft);font-weight:400">(Optional)</span></label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                        <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.email.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="field-group" style="margin-top: 20px;">
+                    <label for="{{ form.address.id_for_label }}" class="form-label">Residential Address <span style="color:var(--crimson)">*</span></label>
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                    <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.address.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Section 3: Portal Access (THE NEW PART) -->
+            <div class="form-section" style="background: var(--card2);">
+                <div class="form-section-title">
+                    <i class="fas fa-shield-halved"></i> Portal Access Credentials
+                </div>
+                <div class="portal-access-box">
+                    <div style="font-size: 13px; color: var(--text-mid); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-info-circle" style="color: var(--crimson)"></i>
+                        These credentials will allow the client to log in to their personal dashboard.
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+                        <div class="field-group">
+                            <label for="{{ form.username.id_for_label }}" class="form-label">Portal Username <span style="color:var(--crimson)">*</span></label>
+                            {{ form.username }}
+                            {% if form.username.errors %}
+                            <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.username.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="field-group">
+                            <label for="{{ form.password.id_for_label }}" class="form-label">Portal Password <span style="color:var(--crimson)">*</span></label>
+                            {{ form.password }}
+                            {% if form.password.errors %}
+                            <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.password.errors.0 }}</div>
+                            {% endif %}
+                            {% if form.password.help_text %}
+                            <div style="font-size: 11px; color: var(--text-soft); margin-top: 5px;">{{ form.password.help_text }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 4: Notes -->
+            <div class="form-section">
+                <div class="form-section-title">
+                    <i class="fas fa-note-sticky"></i> Internal Notes
+                </div>
+                <div class="field-group">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Confidential Notes <span style="color:var(--text-soft);font-weight:400">(Optional)</span></label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                    <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.notes.errors.0 }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Action Bar -->
+            <div style="padding:20px 24px;display:flex;gap:12px;background:var(--card2);border-top:1px solid var(--border);border-radius: 0 0 16px 16px;">
+                <button type="submit" class="btn btn-primary" style="padding: 10px 24px;">
+                    <i class="fas fa-check-circle me-1"></i>
+                    {% if form.instance.id %}Save Changes{% else %}Create Client & Account{% endif %}
+                </button>
+                <a href="{% url 'client_list' %}" class="btn btn-secondary" style="padding: 10px 24px;">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- RIGHT: Info Panels -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- Onboarding Tips -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-lightbulb" style="color:var(--amber)"></i>
+                    Quick Tips
+                </div>
+            </div>
+            <div style="padding:20px">
+                <div style="display:flex;flex-direction:column;gap:16px">
+                    <div style="display:flex;gap:12px">
+                        <div style="width:32px;height:32px;border-radius:10px;background:var(--sapphire-l);color:var(--sapphire);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
+                            <i class="fas fa-user-lock"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px">Portal Access</div>
+                            <div style="font-size:11.5px;color:var(--text-soft);line-height:1.4">Clients will receive access to view their cases and invoices once registered.</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:12px">
+                        <div style="width:32px;height:32px;border-radius:10px;background:var(--emerald-l);color:var(--emerald);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
+                            <i class="fas fa-envelope-open-text"></i>
+                        </div>
+                        <div>
+                            <div style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:2px">Email Accuracy</div>
+                            <div style="font-size:11.5px;color:var(--text-soft);line-height:1.4">Ensure the email is correct for receiving automated updates.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Note -->
+        <div style="background:var(--crimson-l);border:1.5px solid #fed7aa;border-radius:16px;padding:18px">
+            <div style="font-size:13px;font-weight:700;color:var(--crimson);margin-bottom:8px;display:flex;align-items:center;gap:8px">
+                <i class="fas fa-shield-check"></i> Data Security
+            </div>
+            <div style="font-size:12px;color:#7f1d1d;line-height:1.5">
+                All client data and portal credentials are encrypted. Ensure the password meets your firm's security standards.
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

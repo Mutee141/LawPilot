@@ -1,0 +1,605 @@
+{% extends "base/dashboard_base.html" %}
+{% block title %}Employee Bio Data — {{ firm.name }}{% endblock %}
+{% block page_title %}Employee Bio Data{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* ── Role badges matching Juridex palette ── */
+    .role-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 12px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+
+    .role-pill::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .role-firm_owner {
+        background: var(--crimson-l);
+        color: var(--crimson);
+        border: 1px solid #fed7aa;
+    }
+
+    .role-firm_owner::before {
+        background: var(--crimson);
+    }
+
+    .role-senior_lawyer {
+        background: var(--emerald-l);
+        color: var(--emerald);
+        border: 1px solid #a7f3d0;
+    }
+
+    .role-senior_lawyer::before {
+        background: var(--emerald);
+    }
+
+    .role-junior_lawyer {
+        background: var(--amber-l);
+        color: var(--amber);
+        border: 1px solid #fde68a;
+    }
+
+    .role-junior_lawyer::before {
+        background: var(--amber);
+    }
+
+    .role-accountant {
+        background: var(--sapphire-l);
+        color: var(--sapphire);
+        border: 1px solid #bfdbfe;
+    }
+
+    .role-accountant::before {
+        background: var(--sapphire);
+    }
+
+    .role-assistant {
+        background: var(--violet-l);
+        color: var(--violet);
+        border: 1px solid #ddd6fe;
+    }
+
+    .role-assistant::before {
+        background: var(--violet);
+    }
+
+    .role-default {
+        background: #f1f5f9;
+        color: #475569;
+        border: 1px solid #e2e8f0;
+    }
+
+    .role-default::before {
+        background: #94a3b8;
+    }
+
+    /* ── Staff avatar ── */
+    .staff-av {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 800;
+        color: #fff;
+        flex-shrink: 0;
+        letter-spacing: -.5px;
+    }
+
+    /* ── Contact links ── */
+    .contact-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--text-mid);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        transition: color .18s;
+    }
+
+    .contact-link i {
+        font-size: 12px;
+        color: var(--text-soft);
+        transition: color .18s;
+    }
+
+    .contact-link:hover {
+        color: var(--sapphire);
+    }
+
+    .contact-link:hover i {
+        color: var(--sapphire);
+    }
+
+    /* ── "YOU" badge ── */
+    .you-badge {
+        background: var(--sapphire);
+        color: #fff;
+        font-size: 9px;
+        font-weight: 800;
+        padding: 2px 7px;
+        border-radius: 4px;
+        margin-left: 6px;
+        vertical-align: middle;
+        letter-spacing: .5px;
+    }
+
+    /* ── Stats bar ── */
+    .bio-stats {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    .bio-stat-card {
+        background: var(--card);
+        border: 1.5px solid var(--border);
+        border-radius: 14px;
+        padding: 16px 18px;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+        box-shadow: var(--shadow);
+    }
+
+    .bio-stat-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+    }
+
+    .bio-stat-val {
+        font-family: 'Playfair Display', serif;
+        font-size: 26px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
+    }
+
+    .bio-stat-lbl {
+        font-size: 11px;
+        color: var(--text-soft);
+        margin-top: 2px;
+        font-weight: 600;
+    }
+
+    /* ── Search bar ── */
+    .bio-search-wrap {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        border-radius: 11px;
+        padding: 9px 15px;
+        transition: border-color .2s, box-shadow .2s;
+    }
+
+    .bio-search-wrap:focus-within {
+        border-color: var(--crimson);
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, .08);
+    }
+
+    .bio-search-wrap i {
+        color: var(--text-soft);
+        font-size: 13px;
+    }
+
+    .bio-search-wrap input {
+        background: none;
+        border: none;
+        outline: none;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 13px;
+        color: var(--text);
+        width: 220px;
+    }
+
+    .bio-search-wrap input::placeholder {
+        color: var(--text-soft);
+    }
+
+    /* ── Role filter pills ── */
+    .role-filter-btn {
+        font-size: 12px;
+        font-weight: 700;
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1.5px solid var(--border);
+        background: var(--card);
+        color: var(--text-mid);
+        cursor: pointer;
+        transition: all .18s;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .role-filter-btn:hover,
+    .role-filter-btn.active {
+        background: var(--crimson);
+        color: #fff;
+        border-color: var(--crimson);
+    }
+
+    /* ── Table rows ── */
+    .bio-row {
+        display: flex;
+        align-items: center;
+        padding: 14px 22px;
+        border-bottom: 1px solid var(--border);
+        gap: 0;
+        transition: background .15s;
+        animation: rowIn .3s ease both;
+    }
+
+    @keyframes rowIn {
+        from {
+            opacity: 0;
+            transform: translateY(6px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .bio-row:last-child {
+        border-bottom: none;
+    }
+
+    .bio-row:hover {
+        background: #fafbff;
+    }
+
+    /* Column widths */
+    .col-name {
+        flex: 2.5;
+        min-width: 0;
+        display: flex;
+        align-items: center;
+        gap: 13px;
+    }
+
+    .col-role {
+        flex: 1.4;
+        display: flex;
+        justify-content: center;
+    }
+
+    .col-email {
+        flex: 2;
+        min-width: 0;
+    }
+
+    .col-phone {
+        flex: 1.4;
+        min-width: 0;
+    }
+
+    .col-joined {
+        flex: 1.2;
+        min-width: 0;
+    }
+
+    /* Header row */
+    .bio-header {
+        display: flex;
+        align-items: center;
+        padding: 10px 22px;
+        border-bottom: 1px solid var(--border);
+        background: var(--card2);
+    }
+
+    .bio-header-cell {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text-soft);
+    }
+
+    /* Empty state */
+    .bio-empty {
+        padding: 60px 20px;
+        text-align: center;
+        color: var(--text-soft);
+    }
+
+    .bio-empty-icon {
+        width: 70px;
+        height: 70px;
+        border-radius: 20px;
+        background: var(--bg);
+        border: 2px dashed var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        margin: 0 auto 16px;
+        color: var(--border);
+    }
+
+    /* Print styles */
+    @media print {
+
+        .sidebar,
+        .top-navbar,
+        .page-header button,
+        .bio-stats,
+        .bio-search-wrap,
+        .role-filter-btn {
+            display: none !important;
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+            width: 100% !important;
+        }
+
+        .bio-row {
+            break-inside: avoid;
+        }
+    }
+
+    /* Hide rows that don't match search/filter */
+    .bio-row.hidden {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ── Page Header ── -->
+<div class="page-header">
+    <div>
+        <h3>Employee <span>Bio Data</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-id-card-alt" style="color:var(--sapphire)"></i>
+            Complete directory of all staff at <strong style="color:var(--text)">{{ firm.name }}</strong>
+        </div>
+    </div>
+    <div style="display:flex;gap:10px">
+        <button onclick="window.print()" class="btn btn-secondary btn-sm">
+            <i class="fas fa-print me-1"></i> Print Directory
+        </button>
+        {% if request.user.role == 'firm_owner' %}
+        <a href="{% url 'staff_list' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-users-cog me-1"></i> Manage Staff
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ── Stats Bar ── -->
+<div class="bio-stats">
+    <div class="bio-stat-card">
+        <div class="bio-stat-icon" style="background:var(--crimson-l);color:var(--crimson)">
+            <i class="fas fa-users"></i>
+        </div>
+        <div>
+            <div class="bio-stat-val">{{ all_users|length }}</div>
+            <div class="bio-stat-lbl">Total Staff</div>
+        </div>
+    </div>
+    <div class="bio-stat-card">
+        <div class="bio-stat-icon" style="background:var(--emerald-l);color:var(--emerald)">
+            <i class="fas fa-briefcase"></i>
+        </div>
+        <div>
+            <div class="bio-stat-val">{{ all_users|length }}</div>
+            <div class="bio-stat-lbl">Senior Lawyers</div>
+        </div>
+    </div>
+    <div class="bio-stat-card">
+        <div class="bio-stat-icon" style="background:var(--amber-l);color:var(--amber)">
+            <i class="fas fa-gavel"></i>
+        </div>
+        <div>
+            <div class="bio-stat-val">{{ all_users|length }}</div>
+            <div class="bio-stat-lbl">Junior Lawyers</div>
+        </div>
+    </div>
+    <div class="bio-stat-card">
+        <div class="bio-stat-icon" style="background:var(--sapphire-l);color:var(--sapphire)">
+            <i class="fas fa-calculator"></i>
+        </div>
+        <div>
+            <div class="bio-stat-val">{{ all_users|length }}</div>
+            <div class="bio-stat-lbl">Accountants</div>
+        </div>
+    </div>
+    <div class="bio-stat-card">
+        <div class="bio-stat-icon" style="background:var(--violet-l);color:var(--violet)">
+            <i class="fas fa-user-tie"></i>
+        </div>
+        <div>
+            <div class="bio-stat-val">{{ all_users|length }}</div>
+            <div class="bio-stat-lbl">Assistants</div>
+        </div>
+    </div>
+</div>
+
+<!-- ── Main Panel ── -->
+<div class="panel">
+
+    <!-- Toolbar: search + role filters -->
+    <div class="panel-head" style="flex-wrap:wrap;gap:10px">
+        <div class="panel-title">
+            <i class="fas fa-id-card" style="color:var(--crimson)"></i>
+            Staff Directory
+            <span class="panel-count" id="staffCount">{{ all_users|length }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+
+            <!-- Search -->
+            <div class="bio-search-wrap">
+                <i class="fas fa-magnifying-glass"></i>
+                <input type="text" id="bioSearch" placeholder="Search by name, email…">
+            </div>
+
+            <!-- Role filters -->
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+                <button class="role-filter-btn active" data-role="all">All</button>
+                <button class="role-filter-btn" data-role="firm_owner">Owner</button>
+                <button class="role-filter-btn" data-role="senior_lawyer">Senior</button>
+                <button class="role-filter-btn" data-role="junior_lawyer">Junior</button>
+                <button class="role-filter-btn" data-role="accountant">Accountant</button>
+                <button class="role-filter-btn" data-role="assistant">Assistant</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header row -->
+    <div class="bio-header">
+        <div class="bio-header-cell col-name">Full Name</div>
+        <div class="bio-header-cell col-role" style="text-align:center">Role</div>
+        <div class="bio-header-cell col-email">Email Address</div>
+        <div class="bio-header-cell col-phone">Phone Number</div>
+        <div class="bio-header-cell col-joined">Date Joined</div>
+    </div>
+
+    <!-- Staff rows -->
+    <div id="bioTableBody">
+        {% for u in all_users %}
+        <div class="bio-row" data-name="{{ u.get_full_name|lower|default:u.username|lower }}"
+            data-email="{{ u.email|lower }}" data-role="{{ u.role|default:'default' }}"
+            style="animation-delay:{{ forloop.counter0 }}0ms">
+
+            <!-- Name + avatar -->
+            <div class="col-name">
+                <div class="staff-av">
+                    {{ u.first_name|first|default:u.username|first|upper }}
+                </div>
+                <div style="min-width:0">
+                    <div
+                        style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                        {% if u.first_name or u.last_name %}{{ u.first_name }} {{ u.last_name }}{% else %}{{ u.username
+                        }}{% endif %}
+                        {% if request.user == u %}<span class="you-badge">YOU</span>{% endif %}
+                    </div>
+                    <div style="font-size:11px;color:var(--text-soft);margin-top:1px">@{{ u.username }}</div>
+                </div>
+            </div>
+
+            <!-- Role -->
+            <div class="col-role">
+                <span class="role-pill role-{{ u.role|default:'default' }}">
+                    {{ u.get_role_display }}
+                </span>
+            </div>
+
+            <!-- Email -->
+            <div class="col-email">
+                {% if u.email %}
+                <a href="mailto:{{ u.email }}" class="contact-link">
+                    <i class="fas fa-envelope"></i>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ u.email }}</span>
+                </a>
+                {% else %}
+                <span style="font-size:12px;color:var(--text-soft);font-style:italic">Not provided</span>
+                {% endif %}
+            </div>
+
+            <!-- Phone -->
+            <div class="col-phone">
+                {% if u.phone_number %}
+                <a href="tel:{{ u.phone_number }}" class="contact-link">
+                    <i class="fas fa-phone"></i>{{ u.phone_number }}
+                </a>
+                {% else %}
+                <span style="font-size:12px;color:var(--text-soft);font-style:italic">Not provided</span>
+                {% endif %}
+            </div>
+
+            <!-- Date joined -->
+            <div class="col-joined">
+                <div style="font-size:13px;color:var(--text-mid);display:flex;align-items:center;gap:6px">
+                    <i class="far fa-calendar-alt" style="color:var(--text-soft);font-size:11px"></i>
+                    {{ u.date_joined|date:"M d, Y" }}
+                </div>
+            </div>
+
+        </div>
+        {% empty %}
+        <div class="bio-empty">
+            <div class="bio-empty-icon"><i class="fas fa-users-slash"></i></div>
+            <div style="font-size:15px;font-weight:700;color:var(--text-mid);margin-bottom:4px">No staff found</div>
+            <div style="font-size:13px">No members are associated with {{ firm.name }} yet.</div>
+        </div>
+        {% endfor %}
+
+        <!-- No-results state (shown by JS) -->
+        <div id="bioNoResults" style="display:none" class="bio-empty">
+            <div class="bio-empty-icon"><i class="fas fa-magnifying-glass"></i></div>
+            <div style="font-size:15px;font-weight:700;color:var(--text-mid);margin-bottom:4px">No matches found</div>
+            <div style="font-size:13px">Try a different name, email, or role filter.</div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        const rows = document.querySelectorAll('.bio-row');
+        const searchInput = document.getElementById('bioSearch');
+        const filterBtns = document.querySelectorAll('.role-filter-btn');
+        const countBadge = document.getElementById('staffCount');
+        const noResults = document.getElementById('bioNoResults');
+
+        let activeRole = 'all';
+        let searchVal = '';
+
+        function applyFilters() {
+            let visible = 0;
+            rows.forEach(function (row) {
+                const nameMatch = row.dataset.name.includes(searchVal) || row.dataset.email.includes(searchVal);
+                const roleMatch = activeRole === 'all' || row.dataset.role === activeRole;
+                const show = nameMatch && roleMatch;
+                row.classList.toggle('hidden', !show);
+                if (show) visible++;
+            });
+            countBadge.textContent = visible;
+            noResults.style.display = visible === 0 ? 'block' : 'none';
+        }
+
+        searchInput.addEventListener('input', function () {
+            searchVal = this.value.toLowerCase().trim();
+            applyFilters();
+        });
+
+        filterBtns.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                filterBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                activeRole = this.dataset.role;
+                applyFilters();
+            });
+        });
+    })();
+</script>
+{% endblock %}

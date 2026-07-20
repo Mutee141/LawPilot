@@ -1,0 +1,14 @@
+<nav class="navbar navbar-dark bg-dark px-3">
+    <span class="navbar-brand">Law Firm System</span>
+
+    {% if request.user.is_authenticated %}
+    <div class="text-white">
+        {{ request.user.username }}
+        <span class="badge bg-warning text-dark">
+            {{ request.user.role|title }}
+        </span>
+
+        <a href="{% url 'logout' %}" class="btn btn-sm btn-danger ms-3">Logout</a>
+    </div>
+    {% endif %}
+</nav>

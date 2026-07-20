@@ -1,0 +1,179 @@
+{% extends "base/dashboard_base.html" %}
+{% block title %}Client Profile - Law Firm Management{% endblock %}
+{% block page_title %}Client Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+    .info-cell { padding:16px 22px; border-bottom:1px solid var(--border); border-right:1px solid var(--border); }
+    .info-cell:nth-child(even) { border-right:none; }
+    .info-cell:nth-last-child(-n+2) { border-bottom:none; }
+    .info-cell.full { grid-column:1/-1; border-right:none; }
+    .detail-label { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-soft); margin-bottom:5px; }
+    .detail-value { font-size:14px; color:var(--text); font-weight:500; line-height:1.6; }
+    .detail-value a { color:var(--accent2); text-decoration:none; font-weight:600; }
+    .detail-value a:hover { color:var(--crimson); }
+
+    .status-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:11px; font-weight:700; }
+    .status-pill::before { content:''; width:6px; height:6px; border-radius:50%; }
+    .status-pill.pending::before { background:var(--amber); } .status-pill.pending { background:var(--amber-l); color:#78350f; }
+    .status-pill.filed::before   { background:var(--sapphire); } .status-pill.filed { background:var(--sapphire-l); color:#1e3a8a; }
+    .status-pill.decided::before { background:var(--emerald); } .status-pill.decided { background:var(--emerald-l); color:#065f46; }
+    .status-pill.closed::before  { background:#94a3b8; } .status-pill.closed { background:#f1f5f9; color:#475569; }
+
+    .section-table { width:100%; border-collapse:collapse; }
+    .section-table th { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-soft); padding:10px 18px; background:var(--card2); border-bottom:1px solid var(--border); }
+    .section-table td { padding:12px 18px; font-size:13px; color:var(--text); border-bottom:1px solid var(--border); vertical-align:middle; }
+    .section-table tr:last-child td { border-bottom:none; }
+    .section-table tr:hover td { background:#fafbff; }
+
+    .priority-tag { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; }
+    .pdot { width:8px; height:8px; border-radius:50%; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3><span>{{ client.full_name }}</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-user" style="color:var(--sapphire)"></i>
+            Client Profile · {{ client.cases.count }} case{{ client.cases.count|pluralize }}
+        </div>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a href="{% url 'client_edit' client.id %}" class="btn btn-warning btn-sm"><i class="fas fa-edit me-1"></i> Edit</a>
+        <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back</a>
+    </div>
+</div>
+
+<div class="grid-2-1" style="margin-bottom:20px">
+
+    <!-- LEFT: Info -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- Personal Info -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-id-card" style="color:var(--sapphire)"></i> Personal Information</div>
+            </div>
+            <div class="info-grid">
+                <div class="info-cell">
+                    <div class="detail-label">Full Name</div>
+                    <div class="detail-value" style="font-weight:700;font-size:15px">{{ client.full_name }}</div>
+                </div>
+                <div class="info-cell">
+                    <div class="detail-label">CNIC / ID Number</div>
+                    <div class="detail-value"><code style="background:var(--bg);border:1px solid var(--border);padding:3px 8px;border-radius:6px;font-size:13px;color:var(--accent2)">{{ client.cnic_id }}</code></div>
+                </div>
+                <div class="info-cell">
+                    <div class="detail-label">Phone Number</div>
+                    <div class="detail-value"><a href="tel:{{ client.phone }}"><i class="fas fa-phone me-1" style="font-size:11px"></i>{{ client.phone }}</a></div>
+                </div>
+                <div class="info-cell">
+                    <div class="detail-label">Email</div>
+                    <div class="detail-value">
+                        {% if client.email %}<a href="mailto:{{ client.email }}"><i class="fas fa-envelope me-1" style="font-size:11px"></i>{{ client.email }}</a>
+                        {% else %}<span style="color:var(--text-soft);font-style:italic">Not provided</span>{% endif %}
+                    </div>
+                </div>
+                <div class="info-cell full">
+                    <div class="detail-label">Address</div>
+                    <div class="detail-value" style="font-size:13px">{{ client.address|linebreaks }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cases -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-briefcase" style="color:var(--sapphire)"></i> Cases
+                    <span style="background:var(--bg);border:1px solid var(--border);color:var(--text-mid);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">{{ client.cases.count }}</span>
+                </div>
+            </div>
+            {% if client.cases.all %}
+            <table class="section-table">
+                <thead><tr><th>Case Number</th><th>Type</th><th>Court</th><th style="text-align:center">Status</th><th style="text-align:center">Priority</th><th style="text-align:center">Actions</th></tr></thead>
+                <tbody>
+                    {% for case in client.cases.all %}
+                    <tr>
+                        <td><div style="font-size:12px;font-weight:700;color:var(--accent2)">{{ case.case_number }}</div></td>
+                        <td><span style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px">{{ case.get_case_type_display }}</span></td>
+                        <td style="font-size:12px;color:var(--text-mid)">{{ case.court.name|truncatewords:2|default:"—" }}</td>
+                        <td style="text-align:center"><span class="status-pill {{ case.status }}">{{ case.status|capfirst }}</span></td>
+                        <td style="text-align:center">
+                            {% if case.priority == 'high' %}<div class="priority-tag" style="justify-content:center"><div class="pdot" style="background:#ef4444"></div><span style="color:#dc2626">High</span></div>
+                            {% elif case.priority == 'normal' %}<div class="priority-tag" style="justify-content:center"><div class="pdot" style="background:var(--sapphire)"></div><span style="color:var(--sapphire)">Normal</span></div>
+                            {% else %}<div class="priority-tag" style="justify-content:center"><div class="pdot" style="background:#22c55e"></div><span style="color:#16a34a">Low</span></div>{% endif %}
+                        </td>
+                        <td style="text-align:center">
+                            <a href="{% url 'case_detail' case.id %}" class="btn btn-sm btn-secondary"><i class="fas fa-eye"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="padding:28px;text-align:center;color:var(--text-soft)">
+                <i class="fas fa-briefcase" style="font-size:24px;opacity:.2;display:block;margin-bottom:8px"></i>
+                <small>No cases linked to this client yet</small>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Additional Info -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-circle-info" style="color:var(--accent2)"></i> Additional Info</div>
+            </div>
+            <div style="padding:0">
+                <div style="padding:14px 22px;border-bottom:1px solid var(--border)">
+                    <div class="detail-label">Assigned Lawyer</div>
+                    <div class="detail-value">{{ client.owner.get_full_name|default:client.owner.username }}</div>
+                </div>
+                <div style="padding:14px 22px;border-bottom:1px solid var(--border)">
+                    <div class="detail-label">Total Cases</div>
+                    <div class="detail-value">
+                        <span style="background:var(--sapphire-l);color:var(--sapphire);font-size:13px;font-weight:700;padding:4px 14px;border-radius:20px">
+                            {{ client.cases.count }} Case{{ client.cases.count|pluralize }}
+                        </span>
+                    </div>
+                </div>
+                <div style="padding:14px 22px;border-bottom:1px solid var(--border)">
+                    <div class="detail-label">Firm</div>
+                    <div class="detail-value">{{ client.firm.name }}</div>
+                </div>
+                <div style="padding:14px 22px;border-bottom:1px solid var(--border)">
+                    <div class="detail-label">Added On</div>
+                    <div class="detail-value" style="font-size:12px;color:var(--text-soft)">{{ client.created_at|date:"M d, Y H:i" }}</div>
+                </div>
+                <div style="padding:14px 22px">
+                    <div class="detail-label">Notes</div>
+                    <div class="detail-value" style="font-size:13px">
+                        {% if client.notes %}{{ client.notes|linebreaks }}
+                        {% else %}<span style="color:var(--text-soft);font-style:italic">No notes</span>{% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-bolt" style="color:var(--amber)"></i> Quick Actions</div>
+            </div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+                <a href="{% url 'client_edit' client.id %}" class="btn btn-warning btn-sm w-100"><i class="fas fa-edit me-1"></i> Edit Client</a>
+                <a href="{% url 'case_create' %}" class="btn btn-primary btn-sm w-100"><i class="fas fa-plus me-1"></i> New Case for Client</a>
+                <a href="{% url 'client_list' %}" class="btn btn-secondary btn-sm w-100"><i class="fas fa-list me-1"></i> All Clients</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

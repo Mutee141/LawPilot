@@ -1,0 +1,186 @@
+{% extends "base/dashboard_base.html" %}
+{% load static %}
+{% block title %}Firm Settings - Law Firm Management{% endblock %}
+{% block page_title %}Firm Settings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section { padding: 22px; border-bottom: 1px solid var(--border); }
+    .form-section:last-child { border-bottom: none; }
+    .form-section-title {
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 1.5px; color: var(--text-soft);
+        margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .form-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .field-group { margin-bottom: 18px; }
+    .field-group:last-child { margin-bottom: 0; }
+    .info-row { padding: 13px 22px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-soft); }
+    .info-row-val { font-size: 13px; font-weight: 500; color: var(--text); text-align: right; }
+    .read-block { padding: 14px 22px; border-bottom: 1px solid var(--border); }
+    .read-block:last-child { border-bottom: none; }
+    .read-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-soft); margin-bottom: 4px; }
+    .read-val { font-size: 14px; font-weight: 500; color: var(--text); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Firm <span>Settings</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-building" style="color:var(--sapphire)"></i>
+            Manage your firm's information and configuration
+        </div>
+    </div>
+</div>
+
+{% if success %}
+<div class="alert alert-success alert-dismissible fade show mb-4" style="border-radius:12px">
+    <i class="fas fa-check-circle me-1"></i> {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+{% if errors %}
+<div class="alert alert-danger mb-4" style="border-radius:12px">
+    <strong><i class="fas fa-exclamation-circle me-1"></i> Please fix the following:</strong>
+    <ul style="margin:8px 0 0 16px;padding:0">{% for e in errors %}<li style="font-size:13px">{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 300px;gap:20px">
+
+    <!-- LEFT: Form / Read-only -->
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <i class="fas fa-cog" style="color:var(--sapphire)"></i>
+                {% if request.user.role == 'firm_owner' %}Edit Firm Settings{% else %}Firm Information{% endif %}
+            </div>
+        </div>
+
+        {% if request.user.role == 'firm_owner' %}
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-building"></i> Firm Identity</div>
+                <div class="field-group">
+                    <label class="form-label">Firm Name <span style="color:var(--crimson)">*</span></label>
+                    <input type="text" name="firm_name" class="form-control" value="{{ firm.name }}" required>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-phone"></i> Contact Details</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="field-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" name="firm_email" class="form-control" value="{{ firm.email|default:'' }}">
+                    </div>
+                    <div class="field-group">
+                        <label class="form-label">Phone Number</label>
+                        <input type="tel" name="firm_phone" class="form-control" value="{{ firm.phone|default:'' }}">
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="form-label">Address</label>
+                    <textarea name="address" class="form-control" rows="3">{{ firm.address|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-circle-dot"></i> Firm Status</div>
+                <div>
+                    {% if firm.is_active %}
+                    <span style="background:var(--emerald-l);color:#065f46;font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;display:inline-flex;align-items:center;gap:5px">
+                        <span style="width:6px;height:6px;border-radius:50%;background:var(--emerald)"></span> Active
+                    </span>
+                    {% else %}
+                    <span style="background:var(--crimson-l);color:#7f1d1d;font-size:12px;font-weight:700;padding:5px 14px;border-radius:20px;display:inline-flex;align-items:center;gap:5px">
+                        <span style="width:6px;height:6px;border-radius:50%;background:var(--crimson)"></span> Inactive
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div style="padding:18px 22px;display:flex;gap:10px;background:var(--card2);border-top:1px solid var(--border)">
+                <button type="submit" class="btn btn-primary"><i class="fas fa-save me-1"></i> Save Settings</button>
+                {% if request.user.role == 'client' %}<a href="{% url 'client_dashboard' %}" class="btn btn-secondary">
+                {% elif request.user.role == 'senior_lawyer' %}<a href="{% url 'senior_dashboard' %}" class="btn btn-secondary">
+                {% elif request.user.role == 'junior_lawyer' %}<a href="{% url 'junior_dashboard' %}" class="btn btn-secondary">
+                {% elif request.user.role == 'accountant' or request.user.role == 'firm_owner' %}<a href="{% url 'accountant_dashboard' %}" class="btn btn-secondary">
+                {% else %}<a href="{% url 'dashboard_redirect' %}" class="btn btn-secondary">{% endif %}
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+
+        {% else %}
+        <!-- Read-only view -->
+        <div style="padding:14px 22px;background:var(--sapphire-l);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+            <i class="fas fa-lock" style="color:var(--sapphire)"></i>
+            <span style="font-size:13px;color:#1e3a8a;font-weight:600">Only firm owners can modify these settings.</span>
+        </div>
+        <div class="read-block">
+            <div class="read-label">Firm Name</div>
+            <div class="read-val">{{ firm.name }}</div>
+        </div>
+        <div class="read-block">
+            <div class="read-label">Email</div>
+            <div class="read-val">{{ firm.email|default:"—" }}</div>
+        </div>
+        <div class="read-block">
+            <div class="read-label">Phone</div>
+            <div class="read-val">{{ firm.phone|default:"—" }}</div>
+        </div>
+        <div class="read-block">
+            <div class="read-label">Address</div>
+            <div class="read-val" style="font-size:13px">{{ firm.address|default:"—" }}</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Firm Info -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-building" style="color:var(--accent2)"></i> Firm Info</div>
+            </div>
+            <div>
+                <div class="info-row">
+                    <div class="info-row-label">Status</div>
+                    <div class="info-row-val">
+                        {% if firm.is_active %}
+                        <span style="background:var(--emerald-l);color:#065f46;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Active</span>
+                        {% else %}
+                        <span style="background:var(--crimson-l);color:#7f1d1d;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Inactive</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-row">
+                    <div class="info-row-label">Created</div>
+                    <div class="info-row-val" style="font-size:12px;color:var(--text-soft)">{{ firm.created_at|date:"M d, Y" }}</div>
+                </div>
+                <div class="info-row">
+                    <div class="info-row-label">Total Staff</div>
+                    <div class="info-row-val">
+                        <span style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">
+                            {{ firm.users.count }} members
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,239 @@
+{% extends "base/dashboard_base.html" %}
+{% block title %}Invoices - Law Firm Management{% endblock %}
+{% block page_title %}Invoice Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .inv-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 11px; border-radius: 20px;
+        font-size: 11px; font-weight: 700;
+    }
+    .inv-pill::before { content:''; width:6px; height:6px; border-radius:50%; }
+    .inv-pill.paid     { background:var(--emerald-l); color:#065f46; }
+    .inv-pill.paid::before { background:var(--emerald); }
+    .inv-pill.pending  { background:var(--amber-l); color:#78350f; }
+    .inv-pill.pending::before { background:var(--amber); }
+    .inv-pill.overdue  { background:var(--crimson-l); color:#7f1d1d; }
+    .inv-pill.overdue::before { background:var(--crimson); }
+    .inv-pill.draft    { background:#f1f5f9; color:#475569; }
+    .inv-pill.draft::before { background:#94a3b8; }
+    .inv-pill.cancelled{ background:#f1f5f9; color:#475569; }
+    .inv-pill.cancelled::before { background:#64748b; }
+
+    .filter-form {
+        display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;
+        padding: 16px 22px;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 5px; }
+    .filter-label {
+        font-size: 10px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 1px; color: var(--text-soft);
+    }
+
+    .inv-amount {
+        font-family: 'Playfair Display', serif;
+        font-size: 14px; font-weight: 700; color: var(--text);
+    }
+    .case-link {
+        color: var(--accent2); font-weight: 600;
+        text-decoration: none; font-size: 12px;
+    }
+    .case-link:hover { color: var(--crimson); }
+
+    .empty-state {
+        padding: 56px 22px; text-align: center; color: var(--text-soft);
+    }
+    .empty-state i { font-size: 36px; opacity: .18; display: block; margin-bottom: 14px; }
+    .empty-state strong { font-size: 14px; color: var(--text-mid); display: block; margin-bottom: 4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════ PAGE HEADER ══════════════════════ -->
+<div class="page-header">
+    <div>
+        <h3>Invoice <span>Management</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-receipt" style="color:var(--amber)"></i>
+            Track and manage all client invoices
+        </div>
+    </div>
+    <a href="{% url 'invoice_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i> Create Invoice
+    </a>
+</div>
+
+<!-- ══════════════════════ KPI CARDS ══════════════════════ -->
+<div class="kpi-grid" style="margin-bottom:24px">
+    <div class="kpi-card" style="border-left:4px solid var(--sapphire)">
+        <div class="kpi-top">
+            <div class="kpi-icon bl"><i class="fas fa-file-invoice"></i></div>
+            <span class="kpi-trend neutral" style="background:var(--sapphire-l);color:var(--sapphire)">All</span>
+        </div>
+        <div class="kpi-val" style="color:var(--sapphire)">{{ invoices|length }}</div>
+        <div class="kpi-lbl">Total Invoices</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:80%;background:var(--sapphire)"></div></div>
+    </div>
+    <div class="kpi-card" style="border-left:4px solid var(--emerald)">
+        <div class="kpi-top">
+            <div class="kpi-icon gr"><i class="fas fa-check-circle"></i></div>
+            <span class="kpi-trend up">Collected</span>
+        </div>
+        <div class="kpi-val" style="color:var(--emerald);font-size:28px">₨{{ paid_amount|floatformat:0 }}</div>
+        <div class="kpi-lbl">Paid Amount</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:88%;background:var(--emerald)"></div></div>
+    </div>
+    <div class="kpi-card" style="border-left:4px solid var(--amber)">
+        <div class="kpi-top">
+            <div class="kpi-icon am"><i class="fas fa-hourglass-half"></i></div>
+            <span class="kpi-trend neutral">Awaiting</span>
+        </div>
+        <div class="kpi-val" style="color:var(--amber);font-size:28px">₨{{ pending_amount|floatformat:0 }}</div>
+        <div class="kpi-lbl">Pending Amount</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:50%;background:var(--amber)"></div></div>
+    </div>
+    <div class="kpi-card" style="border-left:4px solid var(--crimson)">
+        <div class="kpi-top">
+            <div class="kpi-icon cr"><i class="fas fa-exclamation-circle"></i></div>
+            <span class="kpi-trend down">Overdue</span>
+        </div>
+        <div class="kpi-val" style="color:var(--crimson);font-size:28px">₨{{ overdue_amount|floatformat:0 }}</div>
+        <div class="kpi-lbl">Overdue Amount</div>
+        <div class="kpi-bar"><div class="kpi-bar-fill" style="width:30%;background:var(--crimson)"></div></div>
+    </div>
+</div>
+
+<!-- ══════════════════════ FILTERS ══════════════════════ -->
+<div class="panel" style="margin-bottom:20px">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-filter" style="color:var(--text-soft)"></i>
+            Filters & Search
+        </div>
+    </div>
+    <form method="get" class="filter-form">
+        <div class="filter-group" style="flex:1;min-width:200px">
+            <div class="filter-label">Search</div>
+            <input type="text" name="search" class="form-control form-control-sm"
+                placeholder="Invoice #, client, case..."
+                value="{{ search_query }}">
+        </div>
+        <div class="filter-group">
+            <div class="filter-label">Status</div>
+            <select name="status" class="form-select form-select-sm" style="min-width:140px">
+                <option value="">All Statuses</option>
+                {% for value, label in status_choices %}
+                <option value="{{ value }}" {% if status_filter == value %}selected{% endif %}>{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <div class="filter-label">Client</div>
+            <select name="client" class="form-select form-select-sm" style="min-width:160px">
+                <option value="">All Clients</option>
+                {% for client in clients %}
+                <option value="{{ client.id }}" {% if client_filter|stringformat:"s" == client.id|stringformat:"s" %}selected{% endif %}>
+                    {{ client.full_name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <div class="filter-label">&nbsp;</div>
+            <button type="submit" class="btn btn-primary btn-sm" style="padding:8px 18px">
+                <i class="fas fa-search me-1"></i> Search
+            </button>
+        </div>
+        {% if search_query or status_filter or client_filter %}
+        <div class="filter-group">
+            <div class="filter-label">&nbsp;</div>
+            <a href="{% url 'invoice_list' %}" class="btn btn-secondary btn-sm" style="padding:8px 18px">
+                <i class="fas fa-times me-1"></i> Clear
+            </a>
+        </div>
+        {% endif %}
+    </form>
+</div>
+
+<!-- ══════════════════════ INVOICE TABLE ══════════════════════ -->
+<div class="panel">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-table" style="color:var(--accent2)"></i>
+            Invoice List
+            <span style="background:var(--bg);border:1px solid var(--border);color:var(--text-mid);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">
+                {{ invoices|length }}
+            </span>
+        </div>
+    </div>
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-hashtag me-1"></i> Invoice #</th>
+                    <th><i class="fas fa-user me-1"></i> Client</th>
+                    <th><i class="fas fa-folder me-1"></i> Case</th>
+                    <th style="text-align:right"><i class="fas fa-coins me-1"></i> Amount</th>
+                    <th><i class="fas fa-calendar me-1"></i> Due Date</th>
+                    <th style="text-align:center"><i class="fas fa-circle-dot me-1"></i> Status</th>
+                    <th><i class="fas fa-clock me-1"></i> Created</th>
+                    <th style="text-align:center"><i class="fas fa-cogs me-1"></i> Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in invoices %}
+                <tr>
+                    <td>
+                        <div style="font-size:12px;font-weight:700;color:var(--accent2)">
+                            {{ invoice.invoice_number }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="font-size:13px;font-weight:600;color:var(--text)">{{ invoice.client.full_name }}</div>
+                    </td>
+                    <td>
+                        {% if invoice.case %}
+                        <a href="{% url 'case_detail' invoice.case.id %}" class="case-link">
+                            {{ invoice.case.case_number }}
+                        </a>
+                        {% else %}
+                        <span style="color:var(--text-soft);font-size:12px">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:right">
+                        <div class="inv-amount">₨{{ invoice.amount|floatformat:2 }}</div>
+                    </td>
+                    <td>
+                        <div style="font-size:12px;color:var(--text-mid)">{{ invoice.due_date|date:"d M Y" }}</div>
+                    </td>
+                    <td style="text-align:center">
+                        <span class="inv-pill {{ invoice.status }}">{{ invoice.status|capfirst }}</span>
+                    </td>
+                    <td>
+                        <div style="font-size:11px;color:var(--text-soft)">{{ invoice.created_at|date:"d M Y" }}</div>
+                    </td>
+                    <td style="text-align:center">
+                        <a href="{% url 'invoice_detail' invoice.id %}" class="btn btn-sm btn-secondary" title="View">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <i class="fas fa-file-invoice"></i>
+                            <strong>No invoices found</strong>
+                            <a href="{% url 'invoice_create' %}" style="font-size:13px;color:var(--accent2)">Create one now →</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

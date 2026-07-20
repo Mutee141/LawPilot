@@ -1,0 +1,152 @@
+{% extends 'base/dashboard_base.html' %}
+{% block title %}{{ order.order_title }} - Court Order{% endblock %}
+{% block page_title %}{{ order.order_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-grid { display:grid; grid-template-columns:repeat(3,1fr); }
+    .info-cell { padding:15px 22px; border-bottom:1px solid var(--border); border-right:1px solid var(--border); }
+    .info-cell:nth-child(3n) { border-right:none; }
+    .info-cell.full { grid-column:span 3; border-right:none; border-bottom:none; }
+    .info-cell-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; color:var(--text-soft); margin-bottom:6px; }
+    .info-cell-val { font-size:13px; font-weight:600; color:var(--text); }
+    .summary-block { background:var(--bg); border:1.5px solid var(--border); border-radius:12px; padding:16px; font-size:13px; line-height:1.7; color:var(--text-mid); margin-top:8px; }
+    .doc-row { display:flex; align-items:center; justify-content:space-between; padding:16px 22px; }
+    .info-row { padding:13px 22px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; }
+    .info-row:last-child { border-bottom:none; }
+    .info-row-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-soft); }
+    .info-row-val { font-size:13px; font-weight:500; color:var(--text); text-align:right; }
+    .modal-content { border-radius:16px; border:1.5px solid var(--border); overflow:hidden; }
+    .modal-header { background:var(--crimson-l); border-bottom:1px solid var(--border); padding:16px 22px; }
+    .modal-title { font-size:15px; font-weight:700; color:#7f1d1d; }
+    .modal-body { padding:22px; }
+    .modal-footer { padding:16px 22px; border-top:1px solid var(--border); background:var(--card2); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3><span>{{ order.order_title }}</span></h3>
+        <div style="margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px">{{ order.get_order_type_display }}</span>
+            <span style="font-size:12px;color:var(--text-soft);display:flex;align-items:center;gap:5px">
+                <i class="fas fa-calendar" style="font-size:10px"></i> {{ order.order_date|date:"F d, Y" }}
+            </span>
+        </div>
+    </div>
+    <div style="display:flex;gap:8px">
+        {% if can_edit %}<a href="{% url 'case_order_edit' order.id %}" class="btn btn-warning"><i class="fas fa-edit me-1"></i> Edit</a>{% endif %}
+        {% if order.order_document %}<a href="{{ order.order_document.url }}" class="btn btn-success" download><i class="fas fa-download me-1"></i> Download</a>{% endif %}
+    </div>
+</div>
+
+<div class="grid-2-1">
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-file-alt" style="color:var(--sapphire)"></i> Order Details</div>
+            </div>
+            <div class="info-grid">
+                <div class="info-cell">
+                    <div class="info-cell-label">Case Number</div>
+                    <div class="info-cell-val"><a href="{% url 'case_detail' order.case.id %}" style="color:var(--sapphire);text-decoration:none">{{ order.case.case_number }}</a></div>
+                </div>
+                <div class="info-cell">
+                    <div class="info-cell-label">Client</div>
+                    <div class="info-cell-val">{{ order.case.client.full_name }}</div>
+                </div>
+                <div class="info-cell">
+                    <div class="info-cell-label">Order Type</div>
+                    <div class="info-cell-val">{{ order.get_order_type_display }}</div>
+                </div>
+                {% if order.hearing %}
+                <div class="info-cell" style="grid-column:span 3;border-right:none">
+                    <div class="info-cell-label">Related Hearing</div>
+                    <div class="info-cell-val"><a href="{% url 'hearing_detail' order.hearing.id %}" style="color:var(--sapphire);text-decoration:none">{{ order.hearing.hearing_date|date:"F d, Y h:i A" }}</a></div>
+                </div>
+                {% endif %}
+                <div class="info-cell full">
+                    <div class="info-cell-label">Summary</div>
+                    <div class="summary-block">{{ order.summary|linebreaks }}</div>
+                </div>
+            </div>
+        </div>
+
+        {% if order.order_document %}
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-paperclip" style="color:var(--emerald)"></i> Order Document</div>
+            </div>
+            <div class="doc-row">
+                <div style="display:flex;align-items:center;gap:14px">
+                    <div style="width:46px;height:46px;background:var(--crimson-l);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--crimson)"><i class="fas fa-file-pdf"></i></div>
+                    <div>
+                        <div style="font-size:13px;font-weight:700;color:var(--text)">{{ order.order_document.name }}</div>
+                        <div style="font-size:11px;color:var(--text-soft)">Court Order Document</div>
+                    </div>
+                </div>
+                <a href="{{ order.order_document.url }}" class="btn btn-success btn-sm" download><i class="fas fa-download me-1"></i> Download</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+        <div class="panel">
+            <div class="panel-head"><div class="panel-title"><i class="fas fa-briefcase" style="color:var(--accent2)"></i> Case Info</div></div>
+            <div>
+                <div class="info-row"><div class="info-row-label">Case Type</div><div class="info-row-val" style="font-size:12px;color:var(--text-mid)">{{ order.case.get_case_type_display|default:"—" }}</div></div>
+                <div class="info-row"><div class="info-row-label">Status</div><div class="info-row-val"><span style="background:var(--emerald-l);color:#065f46;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">{{ order.case.get_status_display }}</span></div></div>
+                <div class="info-row"><div class="info-row-label">Priority</div><div class="info-row-val"><span style="background:var(--amber-l);color:var(--amber);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">{{ order.case.get_priority_display }}</span></div></div>
+                {% if order.case.court %}<div class="info-row"><div class="info-row-label">Court</div><div class="info-row-val" style="font-size:12px;color:var(--text-mid)">{{ order.case.court.name }}</div></div>{% endif %}
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head"><div class="panel-title"><i class="fas fa-user" style="color:var(--violet)"></i> Upload Info</div></div>
+            <div>
+                <div class="info-row"><div class="info-row-label">Uploaded By</div><div class="info-row-val" style="font-size:12px">{{ order.uploaded_by.get_full_name|default:order.uploaded_by.username }}</div></div>
+                <div class="info-row"><div class="info-row-label">Upload Date</div><div class="info-row-val" style="font-size:11px;color:var(--text-soft)">{{ order.created_at|date:"M d, Y h:i A" }}</div></div>
+                <div class="info-row"><div class="info-row-label">Last Updated</div><div class="info-row-val" style="font-size:11px;color:var(--text-soft)">{{ order.updated_at|date:"M d, Y h:i A" }}</div></div>
+            </div>
+        </div>
+
+        {% if can_edit %}
+        <div class="panel">
+            <div class="panel-head"><div class="panel-title"><i class="fas fa-bolt" style="color:var(--crimson)"></i> Actions</div></div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+                <a href="{% url 'case_order_edit' order.id %}" class="btn btn-warning btn-sm w-100"><i class="fas fa-edit me-1"></i> Edit Order</a>
+                <button type="button" class="btn btn-danger btn-sm w-100" data-bs-toggle="modal" data-bs-target="#deleteModal"><i class="fas fa-trash me-1"></i> Delete Order</button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% if can_edit %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header"><div class="modal-title"><i class="fas fa-exclamation-triangle me-2"></i>Delete Court Order</div><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+            <div class="modal-body">
+                <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px">
+                    <div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px">{{ order.order_title }}</div>
+                    <div style="font-size:12px;color:var(--text-soft)">{{ order.case.case_number }} &middot; {{ order.get_order_type_display }}</div>
+                </div>
+                <div style="font-size:13px;color:var(--text-mid)">This action <strong>cannot be undone</strong>.</div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <form action="{% url 'case_order_delete' order.id %}" method="post" class="d-inline">{% csrf_token %}<button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-trash me-1"></i> Delete</button></form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

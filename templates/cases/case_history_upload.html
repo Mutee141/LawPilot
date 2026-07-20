@@ -1,0 +1,60 @@
+{% extends "base/base.html" %}
+
+{% block title %}Upload Case History - Law Firm Management{% endblock %}
+{% block page_title %}Upload Case History{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-12">
+        <a href="{% url 'case_history_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to History
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="card" style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+            <div class="card-header text-white" style="background: var(--card2); border-bottom: 1px solid var(--border); color: var(--text) !important; font-weight: 700; padding: 18px 24px;">
+                <i class="fas fa-file-upload" style="color: var(--sapphire)"></i> Bulk Upload Case History
+            </div>
+            <div class="card-body p-4">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <p class="text-muted mb-4">Upload a CSV or Excel file containing historical case records. The file must have a header row and follow the structure below.</p>
+
+                <div class="alert alert-info mb-4" style="font-size: 14px;">
+                    <h6 class="alert-heading fw-bold"><i class="fas fa-info-circle"></i> File Format Requirements</h6>
+                    <p class="mb-2">Your file must contain exactly 4 columns in this specific order:</p>
+                    <ol class="mb-0">
+                        <li><strong>Title</strong> (e.g., "Smith vs State")</li>
+                        <li><strong>Case ID</strong> (e.g., "CR-2023-001")</li>
+                        <li><strong>Court</strong> (e.g., "Supreme Court")</li>
+                        <li><strong>Outcome</strong> (e.g., "Settled out of court")</li>
+                    </ol>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-4">
+                        <label for="csv_file" class="form-label fw-bold">Select CSV or Excel File</label>
+                        <input class="form-control" type="file" id="csv_file" name="csv_file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100 py-2">
+                        <i class="fas fa-cloud-upload-alt me-2"></i> Process and Import Data
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

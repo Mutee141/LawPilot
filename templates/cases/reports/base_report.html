@@ -1,0 +1,155 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}Reports - CaseFlow{% endblock %}
+{% block page_title %}Reports Dashboard{% endblock %}
+
+{% block content %}
+<div class="reports-layout" style="display: flex; gap: 30px; margin-top: 20px;">
+    <!-- Reports Sidebar -->
+    <div class="reports-sidebar" style="flex: 0 0 250px; background: var(--card); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; height: fit-content;">
+        <div style="padding: 16px 20px; border-bottom: 1px solid var(--border); background: var(--bg); font-weight: 600; color: var(--text);">
+            <i class="fas fa-chart-bar" style="margin-right: 8px; color: var(--sapphire);"></i> Reports Menu
+        </div>
+        <div style="display: flex; flex-direction: column;">
+            <a href="{% url 'report_case_history' %}" class="report-menu-item {% if active_report == 'case_history' %}active{% endif %}">
+                <i class="fas fa-history"></i> Case History
+            </a>
+            {% if request.user.role == 'firm_owner' %}
+            <a href="{% url 'report_monthly_filing' %}" class="report-menu-item {% if active_report == 'monthly_filing' %}active{% endif %}">
+                <i class="fas fa-calendar-alt"></i> Monthly Filing
+            </a>
+            {% endif %}
+            {% if request.user.role == 'firm_owner' or request.user.role == 'senior_lawyer' %}
+            <a href="{% url 'report_lawyer_workload' %}" class="report-menu-item {% if active_report == 'lawyer_workload' %}active{% endif %}">
+                <i class="fas fa-users-cog"></i> Lawyer Workload
+            </a>
+            {% endif %}
+            {% if request.user.role == 'firm_owner' %}
+            <a href="{% url 'report_case_status' %}" class="report-menu-item {% if active_report == 'case_status' %}active{% endif %}">
+                <i class="fas fa-chart-pie"></i> Case Status
+            </a>
+            <a href="{% url 'report_hearings' %}" class="report-menu-item {% if active_report == 'hearings' %}active{% endif %}">
+                <i class="fas fa-gavel"></i> Hearing Report
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Main Report Content -->
+    <div class="report-content" style="flex: 1;">
+        <div class="panel">
+            <div class="panel-head" style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="panel-title">
+                    {% block report_title %}Report Title{% endblock %}
+                </div>
+                <div class="export-actions">
+                    {% block export_buttons %}
+                    <!-- Export buttons will be inserted here by child templates -->
+                    {% endblock %}
+                </div>
+            </div>
+            <div class="panel-body" style="padding: 24px;">
+                {% block report_body %}
+                <!-- Report specific content goes here -->
+                {% endblock %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .report-menu-item {
+        padding: 14px 20px;
+        color: var(--text-mid);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid var(--border);
+        transition: all 0.2s ease;
+        font-size: 14px;
+    }
+    .report-menu-item i {
+        width: 24px;
+        color: var(--text-soft);
+        transition: color 0.2s ease;
+    }
+    .report-menu-item:hover {
+        background: var(--bg-hover);
+        color: var(--sapphire);
+    }
+    .report-menu-item:hover i {
+        color: var(--sapphire);
+    }
+    .report-menu-item.active {
+        background: rgba(43, 90, 228, 0.05);
+        color: var(--sapphire);
+        font-weight: 600;
+        border-left: 3px solid var(--sapphire);
+        padding-left: 17px;
+    }
+    .report-menu-item.active i {
+        color: var(--sapphire);
+    }
+    .report-menu-item:last-child {
+        border-bottom: none;
+    }
+    .btn-export {
+        display: inline-flex;
+        align-items: center;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-left: 10px;
+    }
+    .btn-export-excel {
+        background: #107c41;
+        color: white;
+        border: 1px solid #107c41;
+    }
+    .btn-export-excel:hover {
+        background: #0c5e31;
+        color: white;
+    }
+    .btn-export-pdf {
+        background: #d32f2f;
+        color: white;
+        border: 1px solid #d32f2f;
+    }
+    .btn-export-pdf:hover {
+        background: #b71c1c;
+        color: white;
+    }
+    .btn-export i {
+        margin-right: 6px;
+    }
+    table.report-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    table.report-table th {
+        background: var(--bg);
+        padding: 12px;
+        text-align: left;
+        font-size: 12px;
+        text-transform: uppercase;
+        color: var(--text-soft);
+        border-bottom: 1px solid var(--border);
+    }
+    table.report-table td {
+        padding: 12px;
+        font-size: 14px;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+    }
+    table.report-table tr:last-child td {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}

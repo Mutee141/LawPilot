@@ -1,0 +1,144 @@
+{% extends "base/dashboard_base.html" %}
+{% load static %}
+{% block title %}{{ court.name }} - Law Firm Management{% endblock %}
+{% block page_title %}{{ court.name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-grid { display: grid; grid-template-columns: repeat(2,1fr); }
+    .info-cell { padding: 16px 22px; border-bottom: 1px solid var(--border); border-right: 1px solid var(--border); }
+    .info-cell:nth-child(even) { border-right: none; }
+    .info-cell:nth-last-child(-n+2) { border-bottom: none; }
+    .info-cell-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-soft); margin-bottom: 6px; }
+    .info-cell-val { font-size: 14px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 7px; }
+    .status-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:11px; font-weight:700; }
+    .status-pill::before { content:''; width:6px; height:6px; border-radius:50%; }
+    .status-pill.active   { background:var(--emerald-l); color:#065f46; }
+    .status-pill.active::before   { background:var(--emerald); }
+    .status-pill.inactive { background:#f1f5f9; color:#475569; }
+    .status-pill.inactive::before { background:#94a3b8; }
+    .court-type-badge { display:inline-flex; align-items:center; gap:5px; padding:5px 13px; border-radius:20px; font-size:11px; font-weight:700; }
+    .empty-state { padding:36px 22px; text-align:center; color:var(--text-soft); }
+    .empty-state i { font-size:32px; opacity:.15; display:block; margin-bottom:10px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3><span>{{ court.name }}</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-building-columns" style="color:var(--sapphire)"></i>
+            Court Details
+        </div>
+    </div>
+    <div style="display:flex;gap:8px">
+        <a href="{% url 'court_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Back
+        </a>
+        <a href="{% url 'court_update' court.pk %}" class="btn btn-warning">
+            <i class="fas fa-edit me-1"></i> Edit
+        </a>
+        <a href="{% url 'court_delete' court.pk %}" class="btn btn-danger">
+            <i class="fas fa-trash me-1"></i> Delete
+        </a>
+    </div>
+</div>
+
+<div class="grid-2-1">
+
+    <!-- LEFT: Court info -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+        <!-- Court Information -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-building-columns" style="color:var(--sapphire)"></i>
+                    Court Information
+                </div>
+            </div>
+            <div class="info-grid">
+                <div class="info-cell">
+                    <div class="info-cell-label">Court Name</div>
+                    <div class="info-cell-val">
+                        <i class="fas fa-landmark" style="color:var(--sapphire);font-size:13px"></i>
+                        {{ court.name }}
+                    </div>
+                </div>
+                <div class="info-cell">
+                    <div class="info-cell-label">Court Type</div>
+                    <div class="info-cell-val">
+                        {% if court.get_court_type_display == 'Supreme Court' %}
+                            <span class="court-type-badge" style="background:var(--amber-l);color:var(--amber)">
+                                <i class="fas fa-crown" style="font-size:10px"></i> {{ court.get_court_type_display }}
+                            </span>
+                        {% elif court.get_court_type_display == 'High Court' %}
+                            <span class="court-type-badge" style="background:var(--sapphire-l);color:var(--sapphire)">
+                                <i class="fas fa-balance-scale" style="font-size:10px"></i> {{ court.get_court_type_display }}
+                            </span>
+                        {% elif court.get_court_type_display == 'District Court' %}
+                            <span class="court-type-badge" style="background:var(--emerald-l);color:var(--emerald)">
+                                <i class="fas fa-gavel" style="font-size:10px"></i> {{ court.get_court_type_display }}
+                            </span>
+                        {% else %}
+                            <span class="court-type-badge" style="background:var(--violet-l);color:var(--violet)">
+                                <i class="fas fa-star" style="font-size:10px"></i> {{ court.get_court_type_display }}
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-cell" style="grid-column:span 2;border-right:none">
+                    <div class="info-cell-label">Location</div>
+                    <div class="info-cell-val">
+                        <i class="fas fa-map-marker-alt" style="color:var(--crimson);font-size:13px"></i>
+                        {{ court.location }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- RIGHT: Quick Actions -->
+    <div style="display:flex;flex-direction:column;gap:16px;align-self:start">
+
+        <!-- Court Stats -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-chart-bar" style="color:var(--amber)"></i>
+                    Court Stats
+                </div>
+            </div>
+                <div style="padding:14px 22px;display:flex;justify-content:space-between;align-items:center">
+                    <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-soft)">Court Type</div>
+                    <span style="font-size:12px;font-weight:600;color:var(--text-mid)">{{ court.get_court_type_display }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-bolt" style="color:var(--crimson)"></i>
+                    Quick Actions
+                </div>
+            </div>
+            <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+                <a href="{% url 'court_update' court.pk %}" class="btn btn-warning btn-sm w-100">
+                    <i class="fas fa-edit me-1"></i> Edit Court
+                </a>
+                <a href="{% url 'court_list' %}" class="btn btn-secondary btn-sm w-100">
+                    <i class="fas fa-list me-1"></i> All Courts
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

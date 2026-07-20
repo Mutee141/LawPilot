@@ -1,0 +1,137 @@
+{% extends "base/dashboard_base.html" %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Assign New Task</h2>
+    <a href="{% url 'senior_dashboard' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Back to Dashboard
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.title.id_for_label }}" class="form-label">Task Title *</label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.case.id_for_label }}" class="form-label">Related Case *</label>
+                            {{ form.case }}
+                            {% if form.case.errors %}
+                                <div class="text-danger">{{ form.case.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                        {{ form.description }}
+                        {% if form.description.errors %}
+                            <div class="text-danger">{{ form.description.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.assigned_to.id_for_label }}" class="form-label">Assign To Junior Lawyer *</label>
+                            {{ form.assigned_to }}
+                            {% if form.assigned_to.errors %}
+                                <div class="text-danger">{{ form.assigned_to.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.priority.id_for_label }}" class="form-label">Priority *</label>
+                            {{ form.priority }}
+                            {% if form.priority.errors %}
+                                <div class="text-danger">{{ form.priority.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.deadline.id_for_label }}" class="form-label">Deadline</label>
+                            {{ form.deadline }}
+                            {% if form.deadline.errors %}
+                                <div class="text-danger">{{ form.deadline.errors }}</div>
+                            {% endif %}
+                            <small class="form-text text-muted">Optional - Set a deadline for the task</small>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'senior_dashboard' %}" class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Assign Task
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card shadow">
+            <div class="card-header">
+                <h6>Task Assignment Tips</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li class="mb-2">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        <strong>Be Specific:</strong> Provide clear, actionable task descriptions
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-calendar text-info"></i>
+                        <strong>Set Deadlines:</strong> Help junior lawyers prioritize their work
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-link text-success"></i>
+                        <strong>Link to Cases:</strong> Always associate tasks with specific cases
+                    </li>
+                    <li class="mb-2">
+                        <i class="fas fa-flag text-danger"></i>
+                        <strong>Use Priority:</strong> Mark urgent tasks appropriately
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="card shadow mt-3">
+            <div class="card-header">
+                <h6>Priority Levels</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-2">
+                    <span class="badge bg-danger">Urgent</span>
+                    <small class="text-muted">- Immediate attention required</small>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-warning">High</span>
+                    <small class="text-muted">- High priority, complete soon</small>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-info">Medium</span>
+                    <small class="text-muted">- Normal priority</small>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-secondary">Low</span>
+                    <small class="text-muted">- Can be completed when time permits</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

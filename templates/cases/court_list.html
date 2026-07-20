@@ -1,0 +1,242 @@
+{% extends "base/dashboard_base.html" %}
+{% load static %}
+{% block title %}Courts - Law Firm Management{% endblock %}
+{% block page_title %}Courts{% endblock %}
+
+{% block extra_css %}
+<style>
+    .court-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 17px;
+        flex-shrink: 0;
+    }
+
+    .court-icon.supreme {
+        background: linear-gradient(135deg, #7c3aed, #a78bfa);
+        color: #fff;
+    }
+
+    .court-icon.high {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+        color: #fff;
+    }
+
+    .court-icon.district {
+        background: linear-gradient(135deg, #059669, #10b981);
+        color: #fff;
+    }
+
+    .court-icon.other {
+        background: linear-gradient(135deg, #64748b, #94a3b8);
+        color: #fff;
+    }
+
+    .court-type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 4px 11px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .court-type-badge.supreme {
+        background: var(--violet-l);
+        color: var(--violet);
+    }
+
+    .court-type-badge.high {
+        background: var(--crimson-l);
+        color: var(--crimson);
+    }
+
+    .court-type-badge.district {
+        background: var(--emerald-l);
+        color: var(--emerald);
+    }
+
+    .court-type-badge.other {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .empty-full {
+        padding: 64px 22px;
+        text-align: center;
+        color: var(--text-soft);
+    }
+
+    .empty-full i {
+        font-size: 48px;
+        opacity: .12;
+        display: block;
+        margin-bottom: 16px;
+    }
+
+    .empty-full h4 {
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text-mid);
+        margin-bottom: 8px;
+    }
+
+    .empty-full p {
+        font-size: 13px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════ PAGE HEADER ══════════════════════ -->
+<div class="page-header">
+    <div>
+        <h3>Courts <span>Management</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-landmark" style="color:var(--sapphire)"></i>
+            Manage and track all court information
+        </div>
+    </div>
+
+</div>
+
+<!-- ══════════════════════ KPI CARDS ══════════════════════ -->
+<div class="kpi-grid" style="margin-bottom:24px">
+    <div class="kpi-card" style="border-left:4px solid var(--sapphire)">
+        <div class="kpi-top">
+            <div class="kpi-icon bl"><i class="fas fa-landmark"></i></div>
+            <span class="kpi-trend neutral" style="background:var(--sapphire-l);color:var(--sapphire)">All</span>
+        </div>
+        <div class="kpi-val" style="color:var(--sapphire)">{{ courts.count }}</div>
+        <div class="kpi-lbl">Total Courts</div>
+        <div class="kpi-bar">
+            <div class="kpi-bar-fill" style="width:80%;background:var(--sapphire)"></div>
+        </div>
+    </div>
+    <div class="kpi-card" style="border-left:4px solid var(--violet)">
+        <div class="kpi-top">
+            <div class="kpi-icon"
+                style="background:var(--violet-l);color:var(--violet);width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px">
+                <i class="fas fa-balance-scale"></i>
+            </div>
+            <span class="kpi-trend neutral" style="background:var(--violet-l);color:var(--violet)">Supreme</span>
+        </div>
+        <div class="kpi-val" style="color:var(--violet)">{{ supreme_count|default:0 }}</div>
+        <div class="kpi-lbl">Supreme Courts</div>
+        <div class="kpi-bar">
+            <div class="kpi-bar-fill" style="width:30%;background:var(--violet)"></div>
+        </div>
+    </div>
+    <div class="kpi-card" style="border-left:4px solid var(--crimson)">
+        <div class="kpi-top">
+            <div class="kpi-icon cr"><i class="fas fa-gavel"></i></div>
+            <span class="kpi-trend neutral" style="background:var(--crimson-l);color:var(--crimson)">High</span>
+        </div>
+        <div class="kpi-val" style="color:var(--crimson)">{{ high_count|default:0 }}</div>
+        <div class="kpi-lbl">High Courts</div>
+        <div class="kpi-bar">
+            <div class="kpi-bar-fill" style="width:45%;background:var(--crimson)"></div>
+        </div>
+    </div>
+    <div class="kpi-card" style="border-left:4px solid var(--emerald)">
+        <div class="kpi-top">
+            <div class="kpi-icon gr"><i class="fas fa-city"></i></div>
+            <span class="kpi-trend up">District</span>
+        </div>
+        <div class="kpi-val" style="color:var(--emerald)">{{ district_count|default:0 }}</div>
+        <div class="kpi-lbl">District Courts</div>
+        <div class="kpi-bar">
+            <div class="kpi-bar-fill" style="width:60%;background:var(--emerald)"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════ COURTS TABLE ══════════════════════ -->
+<div class="panel">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-table" style="color:var(--accent2)"></i>
+            All Courts
+            <span
+                style="background:var(--bg);border:1px solid var(--border);color:var(--text-mid);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">
+                {{ courts.count }}
+            </span>
+        </div>
+    </div>
+
+    {% if courts %}
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-landmark me-1"></i> Court Name</th>
+                    <th><i class="fas fa-map-marker-alt me-1"></i> Location</th>
+                    <th><i class="fas fa-tag me-1"></i> Type</th>
+                    <th style="text-align:center"><i class="fas fa-cogs me-1"></i> Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for court in courts %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <div
+                                class="court-icon {% if court.court_type == 'supreme' %}supreme{% elif court.court_type == 'high' %}high{% elif court.court_type == 'district' %}district{% else %}other{% endif %}">
+                                <i class="fas fa-landmark"></i>
+                            </div>
+                            <div>
+                                <div style="font-size:14px;font-weight:700;color:var(--text)">{{ court.name }}</div>
+                                <div style="font-size:11px;color:var(--text-soft)">{{ court.location }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-mid)">
+                            <i class="fas fa-map-marker-alt" style="color:var(--crimson);font-size:11px"></i>
+                            {{ court.location }}
+                        </div>
+                    </td>
+                    <td>
+                        <span
+                            class="court-type-badge {% if court.court_type == 'supreme' %}supreme{% elif court.court_type == 'high' %}high{% elif court.court_type == 'district' %}district{% else %}other{% endif %}">
+                            {{ court.get_court_type_display }}
+                        </span>
+                    </td>
+                    <td style="text-align:center">
+                        <div style="display:flex;gap:6px;justify-content:center">
+                            <a href="{% url 'court_detail' court.pk %}" class="btn btn-sm btn-secondary" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'court_update' court.pk %}" class="btn btn-sm btn-warning" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'court_delete' court.pk %}" class="btn btn-sm btn-danger" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-full">
+        <i class="fas fa-landmark"></i>
+        <h4>No Courts Added Yet</h4>
+        <p>Start by adding your first court to manage your cases effectively.</p>
+        <a href="{% url 'court_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i> Add Your First Court
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends 'base/dashboard_base.html' %}
+{% block title %}Delete Court Order{% endblock %}
+{% block page_title %}Delete Court Order{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Delete <span>Court Order</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-exclamation-triangle" style="color:var(--crimson)"></i>
+            This action cannot be undone
+        </div>
+    </div>
+    <a href="{% url 'case_order_detail' order.id %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Cancel
+    </a>
+</div>
+
+<div style="max-width:600px;margin:0 auto">
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title" style="color:var(--crimson)">
+                <i class="fas fa-exclamation-triangle" style="color:var(--crimson)"></i>
+                Confirm Deletion
+            </div>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+
+            <!-- Warning -->
+            <div style="padding:20px 22px;background:var(--amber-l);border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:flex-start">
+                <i class="fas fa-exclamation-circle" style="color:var(--amber);font-size:18px;flex-shrink:0;margin-top:2px"></i>
+                <div style="font-size:13px;color:#78350f">
+                    <strong>Warning:</strong> This will permanently delete the court order and all associated data.
+                </div>
+            </div>
+
+            <!-- Order preview -->
+            <div style="padding:22px;border-bottom:1px solid var(--border)">
+                <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-soft);margin-bottom:12px">Order to be deleted</div>
+                <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:12px;padding:18px">
+                    <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:8px">{{ order.order_title }}</div>
+                    <div style="display:flex;gap:16px;flex-wrap:wrap">
+                        <div style="font-size:12px;color:var(--text-soft)">
+                            <i class="fas fa-briefcase me-1"></i> {{ order.case.case_number }} &mdash; {{ order.case.client.full_name }}
+                        </div>
+                        <div style="font-size:12px;color:var(--text-soft)">
+                            <i class="fas fa-tag me-1"></i> {{ order.get_order_type_display }}
+                        </div>
+                        <div style="font-size:12px;color:var(--text-soft)">
+                            <i class="fas fa-calendar me-1"></i> {{ order.order_date|date:"F d, Y" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if order.order_document %}
+            <!-- Document warning -->
+            <div style="padding:16px 22px;border-bottom:1px solid var(--border);background:var(--sapphire-l);display:flex;gap:10px;align-items:center">
+                <i class="fas fa-paperclip" style="color:var(--sapphire);flex-shrink:0"></i>
+                <div style="font-size:13px;color:#1e3a8a">
+                    The attached document <strong>{{ order.order_document.name }}</strong> will also be permanently deleted.
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div style="padding:18px 22px;display:flex;justify-content:space-between;background:var(--card2)">
+                <a href="{% url 'case_order_detail' order.id %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash me-1"></i> Delete Order
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

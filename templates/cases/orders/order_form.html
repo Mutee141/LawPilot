@@ -1,0 +1,170 @@
+{% extends 'base/dashboard_base.html' %}
+{% block title %}{{ action }} Court Order{% endblock %}
+{% block page_title %}{{ action }} Court Order{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section { padding: 22px; border-bottom: 1px solid var(--border); }
+    .form-section:last-child { border-bottom: none; }
+    .form-section-title {
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 1.5px; color: var(--text-soft);
+        margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .form-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .field-group { margin-bottom: 16px; }
+    .field-group:last-child { margin-bottom: 0; }
+    .field-error { background:var(--crimson-l); color:#7f1d1d; padding:7px 12px; border-radius:8px; margin-top:5px; font-size:12px; border-left:3px solid var(--crimson); }
+    .field-hint { font-size:11px; color:var(--text-soft); margin-top:5px; }
+    .info-row { padding:13px 22px; border-bottom:1px solid var(--border); }
+    .info-row:last-child { border-bottom:none; }
+    .info-row-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-soft); margin-bottom:4px; }
+    .info-row-val { font-size:13px; font-weight:600; color:var(--text); }
+    .help-item { display:flex; gap:10px; align-items:flex-start; margin-bottom:10px; font-size:12px; color:var(--text-mid); }
+    .help-item:last-child { margin-bottom:0; }
+    .help-dot { width:7px; height:7px; border-radius:50%; background:var(--sapphire); margin-top:4px; flex-shrink:0; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>{{ action }} <span>Court Order</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-gavel" style="color:var(--sapphire)"></i>
+            {% if action == 'Create' %}Register a new court order{% else %}Update court order details{% endif %}
+        </div>
+    </div>
+    <a href="{% if user_role == 'firm_owner' %}{% url 'case_order_list_admin' %}{% elif user_role == 'senior_lawyer' %}{% url 'case_order_list_senior' %}{% else %}{% url 'case_order_list_junior' %}{% endif %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Orders
+    </a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 300px;gap:20px">
+
+    <!-- Form -->
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title"><i class="fas fa-gavel" style="color:var(--sapphire)"></i> Order Information</div>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-briefcase"></i> Case &amp; Hearing</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="field-group">
+                        <label for="{{ form.case.id_for_label }}" class="form-label">Case <span style="color:var(--crimson)">*</span></label>
+                        {{ form.case }}
+                        {% if form.case.errors %}<div class="field-error">{{ form.case.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.hearing.id_for_label }}" class="form-label">Hearing <span style="font-weight:400;color:var(--text-soft)">(optional)</span></label>
+                        {{ form.hearing }}
+                        {% if form.hearing.errors %}<div class="field-error">{{ form.hearing.errors.0 }}</div>{% endif %}
+                        <div class="field-hint">Select if this order relates to a specific hearing</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-file-alt"></i> Order Details</div>
+                <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px" class="mb-3">
+                    <div class="field-group">
+                        <label for="{{ form.order_title.id_for_label }}" class="form-label">Order Title <span style="color:var(--crimson)">*</span></label>
+                        {{ form.order_title }}
+                        {% if form.order_title.errors %}<div class="field-error">{{ form.order_title.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.order_type.id_for_label }}" class="form-label">Order Type <span style="color:var(--crimson)">*</span></label>
+                        {{ form.order_type }}
+                        {% if form.order_type.errors %}<div class="field-error">{{ form.order_type.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px">
+                    <div class="field-group">
+                        <label for="{{ form.order_date.id_for_label }}" class="form-label">Order Date <span style="color:var(--crimson)">*</span></label>
+                        {{ form.order_date }}
+                        {% if form.order_date.errors %}<div class="field-error">{{ form.order_date.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="field-group">
+                        <label for="{{ form.order_document.id_for_label }}" class="form-label">Order Document</label>
+                        {{ form.order_document }}
+                        {% if form.order_document.errors %}<div class="field-error">{{ form.order_document.errors.0 }}</div>{% endif %}
+                        <div class="field-hint">PDF, DOC, DOCX &mdash; max 10MB</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-align-left"></i> Summary</div>
+                <div class="field-group">
+                    <label for="{{ form.summary.id_for_label }}" class="form-label">Summary <span style="color:var(--crimson)">*</span></label>
+                    {{ form.summary }}
+                    {% if form.summary.errors %}<div class="field-error">{{ form.summary.errors.0 }}</div>{% endif %}
+                    <div class="field-hint">Provide a detailed summary of the court order</div>
+                </div>
+            </div>
+
+            <div style="padding:18px 22px;display:flex;justify-content:space-between;background:var(--card2);border-top:1px solid var(--border)">
+                <a href="{% if user_role == 'firm_owner' %}{% url 'case_order_list_admin' %}{% elif user_role == 'senior_lawyer' %}{% url 'case_order_list_senior' %}{% else %}{% url 'case_order_list_junior' %}{% endif %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i> {{ action }} Order
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Right sidebar -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+        {% if case %}
+        <div class="panel">
+            <div class="panel-head"><div class="panel-title"><i class="fas fa-briefcase" style="color:var(--accent2)"></i> Case Info</div></div>
+            <div>
+                <div class="info-row"><div class="info-row-label">Case Number</div><div class="info-row-val" style="margin-top:4px">{{ case.case_number }}</div></div>
+                <div class="info-row"><div class="info-row-label">Client</div><div class="info-row-val" style="margin-top:4px">{{ case.client.full_name }}</div></div>
+                <div class="info-row"><div class="info-row-label">Case Type</div><div class="info-row-val" style="margin-top:4px;font-size:12px;color:var(--text-mid)">{{ case.get_case_type_display|default:"—" }}</div></div>
+                <div class="info-row"><div class="info-row-label">Status</div><div class="info-row-val" style="margin-top:4px"><span style="background:var(--emerald-l);color:#065f46;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px">{{ case.get_status_display }}</span></div></div>
+                {% if case.court %}<div class="info-row"><div class="info-row-label">Court</div><div class="info-row-val" style="margin-top:4px;font-size:12px;color:var(--text-mid)">{{ case.court.name }}</div></div>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="panel">
+            <div class="panel-head"><div class="panel-title"><i class="fas fa-circle-info" style="color:var(--sapphire)"></i> Order Types</div></div>
+            <div style="padding:16px 22px">
+                <div class="help-item"><div class="help-dot"></div><div><strong>Interim Order:</strong> Temporary order during case proceedings</div></div>
+                <div class="help-item"><div class="help-dot" style="background:var(--emerald)"></div><div><strong>Final Judgment:</strong> Final decision of the court</div></div>
+                <div class="help-item"><div class="help-dot" style="background:var(--amber)"></div><div><strong>Stay Order:</strong> Order to pause proceedings</div></div>
+                <div class="help-item"><div class="help-dot" style="background:var(--violet)"></div><div><strong>Court Direction:</strong> Instructions from the court</div></div>
+            </div>
+        </div>
+
+        <div class="panel">
+            <div class="panel-head"><div class="panel-title"><i class="fas fa-upload" style="color:var(--emerald)"></i> Document Tips</div></div>
+            <div style="padding:16px 22px">
+                <div class="help-item"><div class="help-dot" style="background:var(--emerald)"></div><div>Upload the official court order document</div></div>
+                <div class="help-item"><div class="help-dot" style="background:var(--emerald)"></div><div>Accepted: PDF, DOC, DOCX</div></div>
+                <div class="help-item"><div class="help-dot" style="background:var(--emerald)"></div><div>Maximum file size: 10MB</div></div>
+                <div class="help-item"><div class="help-dot" style="background:var(--emerald)"></div><div>Ensure the document is clearly readable</div></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.getElementById('{{ form.case.id_for_label }}').addEventListener('change', function() {
+    const hearingSelect = document.getElementById('{{ form.hearing.id_for_label }}');
+    hearingSelect.innerHTML = this.value ? '<option value="">Loading hearings...</option>' : '<option value="">Select a case first</option>';
+    if (this.value) setTimeout(() => { hearingSelect.innerHTML = '<option value="">No hearings available</option>'; }, 500);
+});
+</script>
+{% endblock %}

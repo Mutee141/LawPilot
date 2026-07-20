@@ -1,0 +1,44 @@
+{% extends "cases/reports/base_report.html" %}
+
+{% block report_title %}
+<i class="fas fa-chart-pie" style="color: var(--warning); margin-right: 8px;"></i> Case Status Report
+{% endblock %}
+
+{% block export_buttons %}
+<a href="{% url 'export_report' 'case_status' 'excel' %}" class="btn-export btn-export-excel">
+    <i class="fas fa-file-excel"></i> Export Excel
+</a>
+<a href="{% url 'export_report' 'case_status' 'pdf' %}" class="btn-export btn-export-pdf">
+    <i class="fas fa-file-pdf"></i> Export PDF
+</a>
+{% endblock %}
+
+{% block report_body %}
+<p style="font-size: 14px; color: var(--text-soft); margin-bottom: 20px;">Shows the count of cases in each status.</p>
+
+<table class="report-table">
+    <thead>
+        <tr>
+            <th>Status</th>
+            <th style="text-align: right;">Count</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for status_item in status_counts %}
+        <tr>
+            <td style="font-weight: 600;">
+                {{ status_item.status }}
+            </td>
+            <td style="text-align: right; font-weight: 700; color: var(--sapphire);">
+                {{ status_item.count }}
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2" style="text-align: center; padding: 40px; color: var(--text-soft);">No statuses available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

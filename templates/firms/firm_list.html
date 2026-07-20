@@ -1,0 +1,31 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block content %}
+<h3>Firms</h3>
+
+<a href="{% url 'firm_create' %}" class="btn btn-dark mb-3">Add Firm</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Reg Number</th>
+            <th>Contact</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for firm in object_list %}
+    <tr>
+        <td>{{ firm.name }}</td>
+        <td>{{ firm.registration_number|default:"N/A" }}</td>
+        <td>
+            {{ firm.email|default:"—" }}<br>
+            {{ firm.phone|default:"" }}
+        </td>
+        <td>{% if firm.is_active %}Active{% else %}Inactive{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

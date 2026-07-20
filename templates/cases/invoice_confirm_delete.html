@@ -1,0 +1,44 @@
+{% extends "base/base.html" %}
+
+{% block title %}Delete Invoice - Law Firm Management{% endblock %}
+{% block page_title %}Delete Invoice{% endblock %}
+
+{% block content %}
+
+<div class="row">
+    <div class="col-lg-6 offset-lg-3">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <i class="fas fa-exclamation-triangle"></i> Confirm Delete
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning" role="alert">
+                    <strong>Warning:</strong> You are about to permanently delete this invoice. This action cannot be undone.
+                </div>
+
+                <div class="card bg-light mb-4">
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <strong>Invoice:</strong> {{ invoice.invoice_number }}<br>
+                            <strong>Client:</strong> {{ invoice.client.full_name }}<br>
+                            <strong>Amount:</strong> Rs{{ invoice.amount|floatformat:2 }}<br>
+                            <strong>Status:</strong> {{ invoice.get_status_display }}
+                        </p>
+                    </div>
+                </div>
+
+                <form method="post" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Delete Invoice
+                    </button>
+                    <a href="{% url 'invoice_detail' invoice.id %}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

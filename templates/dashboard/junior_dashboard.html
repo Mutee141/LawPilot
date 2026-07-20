@@ -1,0 +1,182 @@
+{% extends "base/dashboard_base.html" %}
+{% block content %}
+
+<h2 class="mb-4">Junior Lawyer Workspace</h2>
+
+<div class="row mb-4">
+
+    <div class="col-md-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <h6>My Cases</h6>
+                <h3>{{ cases_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm text-center">
+            <div class="card-body">
+                <h6>Pending Tasks</h6>
+                <h3>{{ pending_tasks }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm text-center border-danger">
+            <div class="card-body">
+                <h6>Overdue Tasks</h6>
+                <h3 class="text-danger">{{ overdue_tasks }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card shadow-sm text-center border-success">
+            <div class="card-body">
+                <h6>Completed Tasks</h6>
+                <h3 class="text-success">{{ completed_tasks }}</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header">
+        <h5>My Tasks</h5>
+    </div>
+    <div class="card-body">
+        {% if my_tasks %}
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Task Title</th>
+                            <th>Case</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Deadline</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for task in my_tasks %}
+                            <tr class="{% if task.status == 'overdue' %}table-danger{% elif task.status == 'completed' %}table-success{% endif %}">
+                                <td>
+                                    <strong>{{ task.title }}</strong>
+                                    {% if task.description %}
+                                        <br><small class="text-muted">{{ task.description|truncatechars:50 }}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if task.case %}
+                                        <a href="/cases/{{ task.case.id }}/">{{ task.case.case_number }}</a>
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if task.priority == 'urgent' %}danger{% elif task.priority == 'high' %}warning{% elif task.priority == 'medium' %}info{% else %}secondary{% endif %}">
+                                        {{ task.get_priority_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if task.status == 'completed' %}success{% elif task.status == 'in_progress' %}primary{% elif task.status == 'overdue' %}danger{% else %}secondary{% endif %}">
+                                        {{ task.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if task.deadline %}
+                                        {{ task.deadline }}
+                                        {% if task.is_overdue %}
+                                            <br><small class="text-danger">Overdue!</small>
+                                        {% endif %}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        {% if task.status != 'completed' %}
+                                            <button type="button" class="btn btn-sm btn-success" onclick="updateTaskStatus({{ task.id }}, 'completed')">
+                                                <i class="fas fa-check"></i> Complete
+                                            </button>
+                                            {% if task.status == 'pending' %}
+                                                <button type="button" class="btn btn-sm btn-primary" onclick="updateTaskStatus({{ task.id }}, 'in_progress')">
+                                                    <i class="fas fa-play"></i> Start
+                                                </button>
+                                            {% endif %}
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <p class="text-muted">No tasks assigned to you yet.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header">
+        <h5>My Upcoming Hearings</h5>
+    </div>
+    <div class="card-body">
+        <ul>
+            {% for hearing in upcoming_hearings %}
+                <li>{{ hearing.case.title }} - {{ hearing.hearing_date }}</li>
+            {% empty %}
+                <li>No hearings scheduled</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+
+<script>
+function updateTaskStatus(taskId, newStatus) {
+    fetch(`/accounts/tasks/${taskId}/update-status/`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+        },
+        body: JSON.stringify({
+            'status': newStatus
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error updating task status');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error updating task status');
+    });
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,194 @@
+{% extends "base/dashboard_base.html" %}
+{% load static %}
+{% block title %}Manage Roles - Law Firm Management{% endblock %}
+{% block page_title %}Manage User Roles{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-av { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
+    .perm-check { color:var(--emerald); font-size:14px; }
+    .perm-cross { color:#e2e8f0; font-size:14px; }
+    .matrix-table { width:100%; border-collapse:collapse; }
+    .matrix-table th { font-size:10px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-soft); padding:10px 14px; background:var(--card2); border-bottom:1px solid var(--border); text-align:center; }
+    .matrix-table th:first-child { text-align:left; }
+    .matrix-table td { padding:12px 14px; font-size:13px; color:var(--text); border-bottom:1px solid var(--border); text-align:center; vertical-align:middle; }
+    .matrix-table td:first-child { text-align:left; font-weight:600; }
+    .matrix-table tr:last-child td { border-bottom:none; }
+    .matrix-table tr:hover td { background:#fafbff; }
+    .empty-state { padding:40px 22px; text-align:center; color:var(--text-soft); }
+    .empty-state i { font-size:36px; opacity:.18; display:block; margin-bottom:12px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Manage <span>User Roles</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-user-tag" style="color:var(--sapphire)"></i>
+            Update user roles and permissions for {{ request.user.firm.name }}
+        </div>
+    </div>
+</div>
+
+{% if success %}
+<div class="alert alert-success alert-dismissible fade show mb-4" style="border-radius:12px">
+    <i class="fas fa-check-circle me-1"></i> {{ success }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+{% if error %}
+<div class="alert alert-danger alert-dismissible fade show mb-4" style="border-radius:12px">
+    <i class="fas fa-exclamation-circle me-1"></i> {{ error }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endif %}
+
+<!-- Users Role Table -->
+<div class="panel" style="margin-bottom:20px">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-users" style="color:var(--accent2)"></i>
+            User Roles
+        </div>
+    </div>
+    {% if users %}
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-user me-1"></i> User</th>
+                    <th><i class="fas fa-envelope me-1"></i> Email</th>
+                    <th style="text-align:center"><i class="fas fa-id-badge me-1"></i> Current Role</th>
+                    <th><i class="fas fa-exchange-alt me-1"></i> Change Role</th>
+                    <th style="text-align:center"><i class="fas fa-cogs me-1"></i> Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div class="user-av">{{ u.get_full_name|first|default:u.username|first|upper }}</div>
+                            <div>
+                                <div style="font-size:13px;font-weight:700;color:var(--text)">{{ u.get_full_name|default:u.username }}</div>
+                                <div style="font-size:11px;color:var(--text-soft)">@{{ u.username }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="font-size:12px;color:var(--text-mid)">{{ u.email }}</td>
+                    <td style="text-align:center">
+                        <span style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px">{{ u.get_role_display }}</span>
+                    </td>
+                    <td>
+                        <form method="post" style="display:flex;align-items:center;gap:8px">
+                            {% csrf_token %}
+                            <input type="hidden" name="user_id" value="{{ u.pk }}">
+                            <select name="role" class="form-select form-select-sm" style="min-width:160px">
+                                {% for value, label in role_choices %}
+                                <option value="{{ value }}" {% if u.role == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="btn btn-primary btn-sm" style="white-space:nowrap">
+                                <i class="fas fa-check me-1"></i> Update
+                            </button>
+                        </form>
+                    </td>
+                    <td style="text-align:center">
+                        <a href="{% url 'staff_update' u.pk %}" class="btn btn-sm btn-warning" title="Edit Profile">
+                            <i class="fas fa-edit"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-users"></i>
+        <strong>No users found</strong>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Permissions Matrix -->
+<div class="panel">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-shield-alt" style="color:var(--violet)"></i>
+            Role Permissions Matrix
+        </div>
+    </div>
+    <div style="overflow-x:auto">
+        <table class="matrix-table">
+            <thead>
+                <tr>
+                    <th>Role</th>
+                    <th>Cases</th>
+                    <th>Clients</th>
+                    <th>Hearings</th>
+                    <th>Courts</th>
+                    <th>Staff</th>
+                    <th>Billing</th>
+                    <th>Settings</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span style="background:var(--amber-l);color:var(--amber);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Firm Owner</span></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                </tr>
+                <tr>
+                    <td><span style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Senior Lawyer</span></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                </tr>
+                <tr>
+                    <td><span style="background:var(--emerald-l);color:var(--emerald);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Junior Lawyer</span></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                </tr>
+                <tr>
+                    <td><span style="background:#f1f5f9;color:#475569;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Assistant</span></td>
+                    <td style="font-size:11px;color:var(--text-mid)">Read only</td>
+                    <td style="font-size:11px;color:var(--text-mid)">Read only</td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                </tr>
+                <tr>
+                    <td><span style="background:var(--violet-l);color:var(--violet);font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px">Accountant</span></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                    <td><i class="fas fa-check perm-check"></i></td>
+                    <td><i class="fas fa-times perm-cross"></i></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

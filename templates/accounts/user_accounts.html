@@ -1,0 +1,135 @@
+{% extends "base/dashboard_base.html" %}
+{% load static %}
+{% block title %}User Accounts - Law Firm Management{% endblock %}
+{% block page_title %}User Accounts{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-card {
+        background: var(--card); border: 1.5px solid var(--border);
+        border-radius: 14px; padding: 20px;
+        transition: transform .2s, box-shadow .2s;
+        display: flex; flex-direction: column; gap: 14px;
+    }
+    .user-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,.09); }
+    .user-av-lg {
+        width: 48px; height: 48px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        display: flex; align-items: center; justify-content: center;
+        font-size: 17px; font-weight: 700; color: #fff; flex-shrink: 0;
+    }
+    .user-meta { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-soft); }
+    .user-meta i { font-size: 10px; }
+    .role-desc-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .role-desc-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .role-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .empty-full { padding: 56px 22px; text-align: center; color: var(--text-soft); }
+    .empty-full i { font-size: 40px; opacity: .12; display: block; margin-bottom: 14px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>User <span>Accounts</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-users" style="color:var(--sapphire)"></i>
+            Manage all users in {{ request.user.firm.name }}
+        </div>
+    </div>
+    <a href="{% url 'staff_create' %}" class="btn btn-primary">
+        <i class="fas fa-user-plus me-1"></i> Add New User
+    </a>
+</div>
+
+{% if users %}
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-bottom:24px">
+    {% for u in users %}
+    <div class="user-card">
+        <!-- Top: avatar + name + role -->
+        <div style="display:flex;align-items:center;gap:12px">
+            <div class="user-av-lg">{{ u.get_full_name|first|default:u.username|first|upper }}</div>
+            <div style="flex:1;min-width:0">
+                <div style="font-size:14px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                    {{ u.get_full_name|default:u.username }}
+                </div>
+                <div style="font-size:11px;color:var(--text-soft)">@{{ u.username }}</div>
+            </div>
+            <span style="background:var(--sapphire-l);color:var(--sapphire);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap">
+                {{ u.get_role_display }}
+            </span>
+        </div>
+
+        <!-- Details -->
+        <div style="display:flex;flex-direction:column;gap:6px">
+            <div class="user-meta"><i class="fas fa-envelope"></i> {{ u.email }}</div>
+            {% if u.phone_number %}
+            <div class="user-meta"><i class="fas fa-phone"></i> {{ u.phone_number }}</div>
+            {% endif %}
+            <div class="user-meta"><i class="fas fa-calendar"></i> Joined {{ u.date_joined|date:"M d, Y" }}</div>
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;gap:6px">
+            <a href="{% url 'staff_update' u.pk %}" class="btn btn-warning btn-sm" style="flex:1" title="Edit">
+                <i class="fas fa-edit me-1"></i> Edit
+            </a>
+            <a href="{% url 'manage_roles' %}" class="btn btn-secondary btn-sm" title="Change Role">
+                <i class="fas fa-user-tag"></i>
+            </a>
+            {% if u.pk != request.user.pk %}
+            <a href="{% url 'staff_delete' u.pk %}" class="btn btn-danger btn-sm" title="Delete">
+                <i class="fas fa-trash"></i>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div class="panel">
+    <div class="empty-full">
+        <i class="fas fa-users"></i>
+        <strong style="font-size:15px;color:var(--text-mid);display:block;margin-bottom:6px">No users in this firm yet</strong>
+        <a href="{% url 'staff_create' %}" class="btn btn-primary btn-sm"><i class="fas fa-user-plus me-1"></i> Add one now</a>
+    </div>
+</div>
+{% endif %}
+
+<!-- Role Descriptions -->
+<div class="panel">
+    <div class="panel-head">
+        <div class="panel-title"><i class="fas fa-circle-info" style="color:var(--sapphire)"></i> Role Descriptions</div>
+    </div>
+    <div style="padding:16px 22px">
+        <div class="role-desc-item">
+            <div class="role-dot" style="background:var(--amber)"></div>
+            <div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">Firm Owner</div>
+            <div style="font-size:11px;color:var(--text-soft)">Full system access — manage all data, staff, billing, and settings</div></div>
+        </div>
+        <div class="role-desc-item">
+            <div class="role-dot" style="background:var(--sapphire)"></div>
+            <div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">Senior Lawyer</div>
+            <div style="font-size:11px;color:var(--text-soft)">Manage cases and supervise the legal team</div></div>
+        </div>
+        <div class="role-desc-item">
+            <div class="role-dot" style="background:var(--emerald)"></div>
+            <div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">Junior Lawyer</div>
+            <div style="font-size:11px;color:var(--text-soft)">Handle assigned cases and client matters</div></div>
+        </div>
+        <div class="role-desc-item">
+            <div class="role-dot" style="background:#94a3b8"></div>
+            <div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">Assistant / Clerk</div>
+            <div style="font-size:11px;color:var(--text-soft)">Support documents and administrative tasks (read-only access)</div></div>
+        </div>
+        <div class="role-desc-item">
+            <div class="role-dot" style="background:var(--violet)"></div>
+            <div><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">Accountant</div>
+            <div style="font-size:11px;color:var(--text-soft)">Manage billing, invoices, and financial records</div></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

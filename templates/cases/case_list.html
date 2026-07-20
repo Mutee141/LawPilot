@@ -1,0 +1,174 @@
+{% extends "base/dashboard_base.html" %}
+{% block title %}Cases - Law Firm Management{% endblock %}
+{% block page_title %}Case Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-pill {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 11px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+    .status-pill::before { content:''; width:6px; height:6px; border-radius:50%; }
+    .status-pill.pending  { background:var(--amber-l);   color:#78350f; }
+    .status-pill.pending::before  { background:var(--amber); }
+    .status-pill.filed    { background:var(--sapphire-l); color:#1e3a8a; }
+    .status-pill.filed::before    { background:var(--sapphire); }
+    .status-pill.decided  { background:var(--emerald-l); color:#065f46; }
+    .status-pill.decided::before  { background:var(--emerald); }
+    .status-pill.closed   { background:#f1f5f9; color:#475569; }
+    .status-pill.closed::before   { background:#94a3b8; }
+
+    .priority-tag { display:flex; align-items:center; gap:5px; font-size:12px; font-weight:700; }
+    .pdot { width:8px; height:8px; border-radius:50%; }
+
+    .filter-bar { display:flex; gap:10px; flex-wrap:wrap; padding:14px 22px; border-bottom:1px solid var(--border); align-items:flex-end; }
+    .filter-group { display:flex; flex-direction:column; gap:5px; }
+    .filter-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--text-soft); }
+
+    .empty-state { padding:56px 22px; text-align:center; color:var(--text-soft); }
+    .empty-state i { font-size:36px; opacity:.18; display:block; margin-bottom:14px; }
+    .empty-state strong { font-size:14px; color:var(--text-mid); display:block; margin-bottom:4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Case <span>Management</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-briefcase" style="color:var(--sapphire)"></i>
+            Manage and track all active cases
+        </div>
+    </div>
+    {% if request.user.role == 'firm_owner' %}
+    <a href="{% url 'case_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i> Create New Case
+    </a>
+    {% endif %}
+</div>
+
+<div class="panel">
+    <!-- Filters -->
+    <div class="filter-bar">
+        <div class="filter-group" style="flex:1;min-width:200px">
+            <div class="filter-label">Search</div>
+            <input type="text" id="caseSearch" class="form-control form-control-sm" placeholder="Case number or client...">
+        </div>
+        <div class="filter-group">
+            <div class="filter-label">Status</div>
+            <select id="statusFilter" class="form-select form-select-sm" style="min-width:130px">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="filed">Filed</option>
+                <option value="decided">Decided</option>
+                <option value="closed">Closed</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <div class="filter-label">Priority</div>
+            <select id="priorityFilter" class="form-select form-select-sm" style="min-width:120px">
+                <option value="">All Priority</option>
+                <option value="high">High</option>
+                <option value="normal">Normal</option>
+                <option value="low">Low</option>
+            </select>
+        </div>
+    </div>
+
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse" id="casesTable">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-hashtag me-1"></i> Case Number</th>
+                    <th><i class="fas fa-user me-1"></i> Client</th>
+                    <th><i class="fas fa-tag me-1"></i> Type</th>
+                    <th><i class="fas fa-landmark me-1"></i> Court</th>
+                    <th style="text-align:center"><i class="fas fa-circle-dot me-1"></i> Status</th>
+                    <th><i class="fas fa-flag me-1"></i> Priority</th>
+                    <th><i class="fas fa-user-tie me-1"></i> Assigned To</th>
+                    <th style="text-align:center"><i class="fas fa-cogs me-1"></i> Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for case in cases %}
+                <tr data-status="{{ case.status }}" data-priority="{{ case.priority }}">
+                    <td>
+                        <div style="font-size:12px;font-weight:700;color:var(--accent2)">{{ case.case_number }}</div>
+                    </td>
+                    <td>
+                        <div style="font-size:13px;font-weight:600;color:var(--text)">{{ case.client.full_name|default:"No Client" }}</div>
+                    </td>
+                    <td>
+                        <span style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px">
+                            {{ case.get_case_type_display }}
+                        </span>
+                    </td>
+                    <td style="font-size:13px;color:var(--text-mid)">{{ case.court.name|truncatewords:2|default:"—" }}</td>
+                    <td style="text-align:center">
+                        <span class="status-pill {{ case.status }}">{{ case.status|capfirst }}</span>
+                    </td>
+                    <td>
+                        {% if case.priority == 'high' %}
+                        <div class="priority-tag"><div class="pdot" style="background:#ef4444"></div><span style="color:#dc2626">High</span></div>
+                        {% elif case.priority == 'normal' %}
+                        <div class="priority-tag"><div class="pdot" style="background:var(--sapphire)"></div><span style="color:var(--sapphire)">Normal</span></div>
+                        {% else %}
+                        <div class="priority-tag"><div class="pdot" style="background:#22c55e"></div><span style="color:#16a34a">Low</span></div>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:13px;color:var(--text-mid)">
+                        {% if case.assigned_senior_lawyer %}
+                            {{ case.assigned_senior_lawyer.get_full_name|default:case.assigned_senior_lawyer.username }}
+                        {% else %}
+                            <span class="text-muted">Unassigned</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:center">
+                        <div style="display:flex;gap:6px;justify-content:center">
+                            <a href="{% url 'case_detail' case.id %}" class="btn btn-sm btn-secondary" title="View"><i class="fas fa-eye"></i></a>
+                            {% if request.user.role == "firm_owner" %}
+                            <a href="{% url 'case_update' case.id %}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'case_delete' case.id %}" class="btn btn-sm btn-danger" title="Delete"><i class="fas fa-trash"></i></a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <i class="fas fa-briefcase"></i>
+                            <strong>No cases found</strong>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterTable() {
+    const search = document.getElementById('caseSearch').value.toLowerCase();
+    const status = document.getElementById('statusFilter').value;
+    const priority = document.getElementById('priorityFilter').value;
+    document.querySelectorAll('#casesTable tbody tr').forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowStatus = row.dataset.status || '';
+        const rowPriority = row.dataset.priority || '';
+        const show = (!search || text.includes(search)) &&
+                     (!status || rowStatus === status) &&
+                     (!priority || rowPriority === priority);
+        row.style.display = show ? '' : 'none';
+    });
+}
+document.getElementById('caseSearch').addEventListener('input', filterTable);
+document.getElementById('statusFilter').addEventListener('change', filterTable);
+document.getElementById('priorityFilter').addEventListener('change', filterTable);
+</script>
+{% endblock %}

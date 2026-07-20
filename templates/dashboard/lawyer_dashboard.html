@@ -1,0 +1,249 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}Lawyer Dashboard - Law Firm Management{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="mb-4">
+    <h5 style="color: #666; font-weight: 600;">
+        <i class="fas fa-gavel"></i> Your Cases & Schedule
+    </h5>
+</div>
+
+<!-- KPI Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="stat-card">
+            <h6><i class="fas fa-folder"></i> Total Cases</h6>
+            <div class="number">{{ my_cases }}</div>
+            <small style="color: #95a5a6;">Assigned to you</small>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card warning">
+            <h6><i class="fas fa-hourglass-half"></i> Pending</h6>
+            <div class="number">{{ pending_cases|default:'0' }}</div>
+            <small style="color: #95a5a6;">Awaiting next step</small>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="stat-card success">
+            <h6><i class="fas fa-calendar"></i> Today's Hearings</h6>
+            <div class="number">{{ todays_hearings|default:'0' }}</div>
+            <small style="color: #95a5a6;">Scheduled today</small>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-flash"></i> Quick Actions
+            </div>
+            <div class="card-body">
+                <a href="{% url 'case_create' %}" class="btn btn-primary me-2">
+                    <i class="fas fa-plus"></i> New Case
+                </a>
+                <a href="{% url 'case_order_list_junior' %}" class="btn btn-danger me-2">
+                    <i class="fas fa-gavel"></i> Court Orders
+                </a>
+                <a href="{% url 'case_list' %}" class="btn btn-info me-2">
+                    <i class="fas fa-folder-open"></i> View My Cases
+                </a>
+                <a href="{% url 'hearing_list' %}" class="btn btn-success">
+                    <i class="fas fa-calendar"></i> My Hearings
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- My Cases -->
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-briefcase"></i> My Cases
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Case #</th>
+                                <th>Client</th>
+                                <th>Status</th>
+                                <th>View</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for case in my_cases_list %}
+                            <tr>
+                                <td><strong>{{ case.case_number }}</strong></td>
+                                <td>{{ case.client.full_name|truncatewords:2 }}</td>
+                                <td>
+                                    {% if case.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% elif case.status == 'decided' %}
+                                        <span class="badge bg-success">Decided</span>
+                                    {% else %}
+                                        <span class="badge bg-info">{{ case.status|title }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'case_detail' case.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted">No cases assigned</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upcoming Hearings -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-calendar-check"></i> Upcoming Hearings
+            </div>
+            <div class="card-body">
+                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Case</th>
+                                <th>Court</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for hearing in upcoming_hearings %}
+                            <tr>
+                                <td><small>{{ hearing.hearing_date|date:"M d, Y" }}</small></td>
+                                <td><strong>{{ hearing.case.case_number }}</strong></td>
+                                <td><small>{{ hearing.case.court.name|truncatewords:2 }}</small></td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-muted">No upcoming hearings</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Court Orders -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-gavel"></i> Recent Court Orders
+                <small class="text-muted ms-2">From your assigned cases</small>
+            </div>
+            <div class="card-body">
+                {% if recent_court_orders %}
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Order Title</th>
+                                    <th>Case</th>
+                                    <th>Type</th>
+                                    <th>Date</th>
+                                    <th>Document</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for order in recent_court_orders %}
+                                <tr>
+                                    <td><strong>{{ order.order_title }}</strong></td>
+                                    <td>{{ order.case.case_number }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ order.get_order_type_display }}</span>
+                                    </td>
+                                    <td>{{ order.order_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if order.order_document %}
+                                        <a href="{{ order.order_document.url }}" class="btn btn-sm btn-outline-success">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        {% else %}
+                                        <span class="text-muted">—</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No court orders found for your cases</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Pending Tasks/Deadlines -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-tasks"></i> Pending Actions
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Cases Awaiting Update</h6>
+                        {% if pending_cases_list %}
+                            <ul class="list-group">
+                                {% for case in pending_cases_list %}
+                                <li class="list-group-item list-group-item-light">
+                                    <strong>{{ case.case_number }}</strong> - {{ case.client.full_name }}
+                                    <br><small class="text-muted">Status: {{ case.status|title }}</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No pending cases</p>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Upcoming Deadlines</h6>
+                        {% if upcoming_deadlines %}
+                            <ul class="list-group">
+                                {% for deadline in upcoming_deadlines %}
+                                <li class="list-group-item list-group-item-warning">
+                                    <strong>{{ deadline.name }}</strong>
+                                    <br><small>Due: {{ deadline.date|date:"M d, Y" }}</small>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        {% else %}
+                            <p class="text-muted">No upcoming deadlines</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

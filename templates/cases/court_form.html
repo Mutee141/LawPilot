@@ -1,0 +1,166 @@
+{% extends "base/dashboard_base.html" %}
+{% load static %}
+{% block title %}{% if court %}Edit Court{% else %}Add Court{% endif %} - Law Firm Management{% endblock %}
+{% block page_title %}{% if court %}Edit Court{% else %}Add New Court{% endif %}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section { padding: 22px; border-bottom: 1px solid var(--border); }
+    .form-section:last-child { border-bottom: none; }
+    .form-section-title {
+        font-size: 11px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 1.5px; color: var(--text-soft);
+        margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+    }
+    .form-section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+    .field-group { margin-bottom: 18px; }
+    .field-group:last-child { margin-bottom: 0; }
+    .field-error {
+        background: var(--crimson-l); color: #7f1d1d;
+        padding: 8px 12px; border-radius: 8px; margin-top: 6px;
+        font-size: 12px; border-left: 3px solid var(--crimson);
+        display: flex; align-items: center; gap: 6px;
+    }
+    .info-row { padding: 14px 22px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; }
+    .info-row:last-child { border-bottom: none; }
+    .info-row-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>{% if court %}Edit <span>Court</span>{% else %}Add New <span>Court</span>{% endif %}</h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-building-columns" style="color:var(--sapphire)"></i>
+            {% if court %}Update court details{% else %}Register a new court in the system{% endif %}
+        </div>
+    </div>
+    <a href="{% url 'court_list' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left me-1"></i> Back to Courts
+    </a>
+</div>
+
+{% if form.non_field_errors %}
+<div class="alert alert-danger mb-4">
+    <strong><i class="fas fa-exclamation-triangle me-1"></i> Please fix the following:</strong>
+    <ul style="margin:8px 0 0 16px;padding:0">
+        {% for error in form.non_field_errors %}<li style="font-size:13px">{{ error }}</li>{% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div style="display:grid;grid-template-columns:1fr 300px;gap:20px">
+
+    <!-- LEFT: Form -->
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <i class="fas fa-building-columns" style="color:var(--sapphire)"></i>
+                Court Details
+            </div>
+        </div>
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+
+            <div class="form-section">
+                <div class="form-section-title"><i class="fas fa-landmark"></i> Basic Information</div>
+
+                <div class="field-group">
+                    <label for="{{ form.name.id_for_label }}" class="form-label">
+                        {{ form.name.label }} <span style="color:var(--crimson)">*</span>
+                    </label>
+                    {{ form.name }}
+                    {% if form.name.errors %}
+                    <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.name.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.location.id_for_label }}" class="form-label">
+                        {{ form.location.label }} <span style="color:var(--crimson)">*</span>
+                    </label>
+                    {{ form.location }}
+                    {% if form.location.errors %}
+                    <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.location.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.court_type.id_for_label }}" class="form-label">
+                        {{ form.court_type.label }} <span style="color:var(--crimson)">*</span>
+                    </label>
+                    {{ form.court_type }}
+                    {% if form.court_type.errors %}
+                    <div class="field-error"><i class="fas fa-exclamation-circle"></i> {{ form.court_type.errors.0 }}</div>
+                    {% endif %}
+                </div>
+
+
+            </div>
+
+            <!-- Submit bar -->
+            <div style="padding:18px 22px;display:flex;gap:10px;background:var(--card2);border-top:1px solid var(--border)">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save me-1"></i>
+                    {% if court %}Update Court{% else %}Add Court{% endif %}
+                </button>
+                <a href="{% url 'court_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- RIGHT: Court types info -->
+    <div class="panel" style="align-self:start">
+        <div class="panel-head">
+            <div class="panel-title">
+                <i class="fas fa-circle-info" style="color:var(--emerald)"></i>
+                Court Types
+            </div>
+        </div>
+
+        <div class="info-row">
+            <div class="info-row-icon" style="background:var(--amber-l);color:var(--amber)">
+                <i class="fas fa-crown"></i>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Supreme Court</div>
+                <div style="font-size:11px;color:var(--text-soft);margin-top:2px">Highest court of the jurisdiction</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-row-icon" style="background:var(--sapphire-l);color:var(--sapphire)">
+                <i class="fas fa-balance-scale"></i>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">High Court</div>
+                <div style="font-size:11px;color:var(--text-soft);margin-top:2px">Appellate court for civil and criminal matters</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-row-icon" style="background:var(--emerald-l);color:var(--emerald)">
+                <i class="fas fa-gavel"></i>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">District Court</div>
+                <div style="font-size:11px;color:var(--text-soft);margin-top:2px">First instance court at district level</div>
+            </div>
+        </div>
+        <div class="info-row">
+            <div class="info-row-icon" style="background:var(--violet-l);color:var(--violet)">
+                <i class="fas fa-star"></i>
+            </div>
+            <div>
+                <div style="font-size:13px;font-weight:700;color:var(--text)">Special Court</div>
+                <div style="font-size:11px;color:var(--text-soft);margin-top:2px">Specialized tribunals and benches</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

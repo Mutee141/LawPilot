@@ -1,0 +1,1005 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}System Admin Dashboard - CaseFlow{% endblock %}
+{% block page_title %}System Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin-bottom: 16px;
+    }
+
+    .stat-value {
+        font-family: 'Playfair Display', serif;
+        font-size: 36px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
+        margin-bottom: 8px;
+    }
+
+    .stat-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-soft);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .firm-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-top: 24px;
+    }
+
+    .firm-card {
+        background: var(--card);
+        border: 1.5px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .firm-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--crimson);
+        box-shadow: 0 12px 28px rgba(255, 107, 0, 0.06);
+    }
+
+    .firm-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--sapphire), var(--crimson));
+        opacity: 0;
+        transition: opacity 0.25s;
+    }
+
+    .firm-card:hover::before {
+        opacity: 1;
+    }
+
+    .firm-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+
+    .firm-name {
+        font-size: 19px;
+        font-weight: 800;
+        color: var(--text);
+        letter-spacing: -0.3px;
+    }
+
+    /* Filter Pills */
+    .firm-filter-pill {
+        border: 1.5px solid var(--border) !important;
+        background: var(--card) !important;
+        color: var(--text-mid) !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer;
+    }
+
+    .firm-filter-pill:hover {
+        background: var(--bg) !important;
+        color: var(--text) !important;
+        border-color: var(--text-soft) !important;
+    }
+
+    .firm-filter-pill.active {
+        background: var(--crimson) !important;
+        color: #fff !important;
+        border-color: var(--crimson) !important;
+        box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
+    }
+
+    .firm-search-filter-panel {
+        background: var(--card);
+        border: 1.5px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    #firmSearchInput:focus {
+        border-color: var(--crimson) !important;
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15) !important;
+        outline: none;
+    }
+
+    .firm-row {
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .firm-row:hover {
+        background-color: rgba(255, 107, 0, 0.02) !important;
+    }
+
+    mark.search-highlight {
+        background: rgba(255, 107, 0, 0.2) !important;
+        color: var(--crimson) !important;
+        font-weight: 800;
+        border-radius: 4px;
+        padding: 2px 4px;
+    }
+
+    .firm-status {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+
+    .status-active {
+        background: var(--emerald-l);
+        color: var(--emerald);
+    }
+
+    .status-inactive {
+        background: var(--amber-l);
+        color: var(--amber);
+    }
+
+    .firm-detail {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 13px;
+        color: var(--text-mid);
+        margin-bottom: 8px;
+    }
+
+    /* Modal Styling */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.45);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-overlay.active {
+        display: flex;
+    }
+
+    .modal-panel {
+        background: var(--card);
+        border-radius: 16px;
+        width: 100%;
+        max-width: 500px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15);
+        overflow: hidden;
+    }
+
+    .modal-head {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-title {
+        font-size: 16px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--text);
+    }
+
+    .modal-body {
+        padding: 24px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-soft);
+        margin-bottom: 6px;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+        border-color: var(--sapphire);
+    }
+
+    .modal-foot {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 30px;">
+    <div>
+        <h3>System <span>Administration</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;">
+            Manage and oversee registered firms in the system.
+        </div>
+    </div>
+    <button class="btn btn-primary" id="openCreateModal">
+        <i class="fas fa-plus me-1"></i> Add New Firm
+    </button>
+</div>
+
+<div class="grid-2" style="margin-bottom: 30px;">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--sapphire-l); color: var(--sapphire)">
+            <i class="fas fa-building"></i>
+        </div>
+        <div class="stat-value">{{ total_firms }}</div>
+        <div class="stat-label">Total Firms Registered</div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: var(--emerald-l); color: var(--emerald)">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-value">{{ active_firms }}</div>
+        <div class="stat-label">Active Firms</div>
+    </div>
+</div>
+
+<!-- Analytics Charts -->
+<div
+    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 30px;">
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <i class="fas fa-calendar-alt" style="color: var(--sapphire)"></i> Firms Registered Per Month
+            </div>
+        </div>
+        <div class="panel-body" style="padding: 20px;">
+            <canvas id="firmsMonthChart" height="250"></canvas>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <i class="fas fa-briefcase" style="color: var(--sapphire)"></i> Total Cases Per Firm
+            </div>
+        </div>
+        <div class="panel-body" style="padding: 20px;">
+            <canvas id="firmCasesChart" height="250"></canvas>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <i class="fas fa-users" style="color: var(--sapphire)"></i> Total Users Per Firm
+            </div>
+        </div>
+        <div class="panel-body" style="padding: 20px;">
+            <canvas id="firmUsersChart" height="250"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-list"></i> Registered Firms
+        </div>
+    </div>
+    <div class="panel-body" style="padding: 24px; background: var(--bg);">
+        <!-- Beautiful Search & Filter Panel -->
+        <div class="firm-search-filter-panel">
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 300px;">
+                <div style="position: relative; width: 100%;">
+                    <i class="fas fa-search"
+                        style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-soft); font-size: 14px;"></i>
+                    <input type="text" id="firmSearchInput"
+                        placeholder="Search firms by name, email, phone or registration number..."
+                        style="width: 100%; padding: 12px 16px 12px 42px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; transition: all 0.25s ease;"
+                        oninput="filterFirms()">
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <span
+                    style="font-size: 12px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 8px;">Filter
+                    by:</span>
+                <button type="button" class="btn btn-sm firm-filter-pill active"
+                    onclick="setFirmFilter('all', this)">All Firms</button>
+                <button type="button" class="btn btn-sm firm-filter-pill" onclick="setFirmFilter('test', this)"><i
+                        class="fas fa-flask me-1"></i> Test Firms</button>
+                <button type="button" class="btn btn-sm firm-filter-pill" onclick="setFirmFilter('active', this)"><i
+                        class="fas fa-check-circle me-1"></i> Active</button>
+                <button type="button" class="btn btn-sm firm-filter-pill" onclick="setFirmFilter('inactive', this)"><i
+                        class="fas fa-ban me-1"></i> Inactive</button>
+            </div>
+        </div>
+
+        {% if firms %}
+        <div class="firm-grid" style="margin-top: 0">
+            {% for firm in firms %}
+            <div class="firm-card">
+                <div class="firm-header">
+                    <div>
+                        <div class="firm-name" data-original-name="{{ firm.name }}">{{ firm.name }}</div>
+                        <div class="firm-reg-no" style="font-size: 12px; color: var(--text-soft); margin-top:2px;">Reg
+                            No: <span>{{ firm.registration_number|default:"N/A" }}</span></div>
+                    </div>
+                    {% if firm.is_active %}
+                    <span class="firm-status status-active">Active</span>
+                    {% else %}
+                    <span class="firm-status status-inactive">Inactive</span>
+                    {% endif %}
+                </div>
+                <div style="border-top: 1px dashed var(--border); padding-top: 16px; margin-top: 10px;">
+                    <div class="firm-detail">
+                        <i class="fas fa-envelope" style="width: 16px; text-align: center; color: var(--text-soft)"></i>
+                        {{ firm.email|default:"No email provided" }}
+                    </div>
+                    <div class="firm-detail">
+                        <i class="fas fa-phone" style="width: 16px; text-align: center; color: var(--text-soft)"></i>
+                        {{ firm.phone|default:"No phone provided" }}
+                    </div>
+                    <div class="firm-detail">
+                        <i class="fas fa-calendar" style="width: 16px; text-align: center; color: var(--text-soft)"></i>
+                        Registered on: {{ firm.created_at|date:"M d, Y" }}
+                    </div>
+                    <div class="firm-detail">
+                        <i class="fas fa-gavel" style="width: 16px; text-align: center; color: var(--text-soft)"></i>
+                        Primary Court: <span style="color: var(--sapphire); font-weight: 600; margin-left: 4px;">{{ firm.court.name|default:"Not Assigned" }}</span>
+                    </div>
+                </div>
+                <div style="border-top: 1px dashed var(--border); padding-top: 12px; margin-top: 12px;">
+                    <div style="font-size: 12px; font-weight: 700; color: var(--text-mid); margin-bottom: 8px;">
+                        <i class="fas fa-users" style="color: var(--sapphire); margin-right: 4px;"></i> Firm Employees &
+                        Users
+                    </div>
+                    <div style="font-size: 12px; color: var(--text-soft); line-height: 1.5;">
+                        {% for user in firm.users.all %}
+                        <span
+                            style="display:inline-block; background: var(--bg); border: 1px solid var(--border); padding: 2px 6px; border-radius: 4px; margin-bottom: 4px;">
+                            {{ user.get_full_name|default:user.username }}
+                            <span style="opacity: 0.6; font-size: 10px;">({{ user.get_role_display }})</span>
+                        </span>
+                        {% empty %}
+                        <em>No employees registered yet.</em>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Empty state for grid -->
+        <div id="firmGridEmptyState"
+            style="display: none; text-align: center; padding: 48px 24px; background: var(--card); border: 1.5px solid var(--border); border-radius: 16px;">
+            <div style="font-size: 40px; color: var(--crimson); margin-bottom: 12px;"><i
+                    class="fas fa-search-minus"></i></div>
+            <div style="font-size: 16px; font-weight: 700; color: var(--text);">No matching firms found</div>
+            <div style="font-size: 12px; color: var(--text-soft); margin-top: 4px;">Try adjusting your search query or
+                selection filters.</div>
+        </div>
+        {% else %}
+        <div style="text-align: center; padding: 40px 0;">
+            <div style="font-size: 48px; color: var(--border); margin-bottom: 16px;"><i class="fas fa-folder-open"></i>
+            </div>
+            <div style="font-size: 16px; font-weight: 600; color: var(--text-mid);">No firms registered yet</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="panel" style="margin-top: 30px;">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-list-alt" style="color: var(--sapphire)"></i> Firm Details List
+        </div>
+    </div>
+    <div style="overflow-x:auto">
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--card2); border-bottom: 1px solid var(--border);">
+                    <th
+                        style="padding: 12px 24px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">
+                        Firm Name</th>
+                    <th
+                        style="padding: 12px 16px; text-align: center; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">
+                        Status</th>
+                    <th
+                        style="padding: 12px 16px; text-align: center; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">
+                        Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for firm in firms %}
+                <tr class="firm-row" style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 14px 24px;">
+                        <div class="firm-row-name" data-original-name="{{ firm.name }}"
+                            style="font-weight: 700; color: var(--text);">{{ firm.name }}</div>
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center;">
+                        {% if firm.is_active %}
+                        <span
+                            style="display: inline-block; width: 8px; height: 8px; background: var(--emerald); border-radius: 50%; margin-right: 4px;"></span>
+                        <span class="firm-row-status firm-status status-active">Active</span>
+                        {% else %}
+                        <span
+                            style="display: inline-block; width: 8px; height: 8px; background: var(--amber); border-radius: 50%; margin-right: 4px;"></span>
+                        <span class="firm-row-status firm-status status-inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center;">
+                        <a href="{% url 'firm_detail' firm.pk %}"
+                            style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; background: var(--sapphire-l); color: var(--sapphire); border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; transition: all 0.2s;"
+                            onmouseover="this.style.background='var(--sapphire)';this.style.color='#fff';"
+                            onmouseout="this.style.background='var(--sapphire-l)';this.style.color='var(--sapphire)';">
+                            <i class="fas fa-eye"></i> View
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="padding: 40px; text-align: center; color: var(--text-soft);">No firms
+                        registered yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Empty state for table -->
+    <div id="firmTableEmptyState"
+        style="display: none; text-align: center; padding: 48px 24px; background: var(--card); border-top: 1px solid var(--border);">
+        <div style="font-size: 40px; color: var(--crimson); margin-bottom: 12px;"><i class="fas fa-search-minus"></i>
+        </div>
+        <div style="font-size: 16px; font-weight: 700; color: var(--text);">No matching firms found</div>
+        <div style="font-size: 12px; color: var(--text-soft); margin-top: 4px;">Try adjusting your search query or
+            selection filters.</div>
+    </div>
+</div>
+
+<div class="panel" style="margin-top: 30px;">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-users" style="color: var(--sapphire)"></i> All System Employees & Users
+        </div>
+    </div>
+    <div style="overflow-x:auto">
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--card2); border-bottom: 1px solid var(--border);">
+                    <th
+                        style="padding: 12px 24px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">
+                        Employee Name</th>
+                    <th
+                        style="padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">
+                        Firm</th>
+                    <th
+                        style="padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">
+                        Role</th>
+                    <th
+                        style="padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">
+                        Contact</th>
+                    <th
+                        style="padding: 12px 16px; text-align: center; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">
+                        Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for emp in all_employees %}
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 14px 24px;">
+                        <div style="font-weight: 700; color: var(--text);">{{ emp.get_full_name|default:emp.username }}
+                        </div>
+                        <div style="font-size: 11px; color: var(--text-soft);">@{{ emp.username }}</div>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        <span style="font-size: 13px; color: var(--sapphire); font-weight: 600;">{{ emp.firm.name|default:"No Firm" }}</span>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        <span
+                            style="font-size: 11px; background: var(--bg); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">{{ emp.get_role_display }}</span>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        <div style="font-size: 12px; color: var(--text-mid);">{{ emp.email|default:"—" }}</div>
+                        <div style="font-size: 12px; color: var(--text-soft);">{{ emp.phone_number|default:"" }}</div>
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center;">
+                        {% if emp.is_active %}
+                        <span
+                            style="display: inline-block; width: 8px; height: 8px; background: var(--emerald); border-radius: 50%; margin-right: 4px;"></span>
+                        <span style="font-size: 11px; font-weight: 700; color: var(--emerald);">Active</span>
+                        {% else %}
+                        <span
+                            style="display: inline-block; width: 8px; height: 8px; background: var(--border); border-radius: 50%; margin-right: 4px;"></span>
+                        <span style="font-size: 11px; font-weight: 700; color: var(--text-soft);">Inactive</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding: 40px; text-align: center; color: var(--text-soft);">No employees
+                        found in the system.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="createFirmModal">
+    <div class="modal-panel" style="max-width: 800px; max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-head">
+            <div class="modal-title">
+                <i class="fas fa-building" style="color: var(--sapphire)"></i> Register New Firm & Owner
+            </div>
+            <button id="closeModalBtn"
+                style="background: none; border: none; cursor: pointer; color: var(--text-soft); font-size: 18px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="post" action="{% url 'system_admin_dashboard' %}"
+            style="display: flex; flex-direction: column; overflow: hidden; flex: 1;">
+            {% csrf_token %}
+            <div class="modal-body" style="overflow-y: auto; padding: 24px;">
+
+                <p style="font-size: 12px; color: var(--text-soft); margin-bottom: 20px;">
+                    <strong>Note:</strong> The fields with <span style="color: red;">*</span> are required
+                </p>
+
+                <!-- Personal Information -->
+                <h4
+                    style="font-size: 14px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">
+                    Personal Information</h4>
+                <div class="grid-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>First Name<span style="color: red;">*</span></label>
+                        <input type="text" name="first_name" required placeholder="eg: Ali">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name<span style="color: red;">*</span></label>
+                        <input type="text" name="last_name" required placeholder="eg: Ahmad">
+                    </div>
+                    <div class="form-group">
+                        <label>Gender<span style="color: red;">*</span></label>
+                        <select name="gender" required
+                            style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px;">
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>CNIC No.<span style="color: red;">*</span></label>
+                        <input type="text" name="cnic_no" required placeholder="3740149922830">
+                    </div>
+                    <div class="form-group">
+                        <label>Registration No.</label>
+                        <input type="text" name="registration_number" placeholder="Registration #">
+                    </div>
+                </div>
+                <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Email<span style="color: red;">*</span></label>
+                        <input type="email" name="email" required placeholder="e.g. something@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile No.<span style="color: red;">*</span></label>
+                        <input type="text" name="mobile_no" required placeholder="03xxxxxxxxx">
+                    </div>
+                </div>
+
+                <div class="grid-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="form-group">
+                        <label>Country</label>
+                        <select name="country"
+                            style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px;">
+                            <option value="Pakistan">Pakistan</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Province</label>
+                        <select name="province"
+                            style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px;">
+                            <option value="Punjab">Punjab</option>
+                            <option value="Sindh">Sindh</option>
+                            <option value="KPK">KPK</option>
+                            <option value="Balochistan">Balochistan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>City</label>
+                        <select name="city"
+                            style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 14px;">
+                            <option value="Lahore">Lahore</option>
+                            <option value="Karachi">Karachi</option>
+                            <option value="Islamabad">Islamabad</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 20px; margin-top: 15px;">
+                    <label>Address<span style="color: red;">*</span></label>
+                    <textarea name="address" rows="3" required placeholder=""></textarea>
+                </div>
+
+                <!-- Account Details -->
+                <h4
+                    style="font-size: 14px; margin-top: 20px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">
+                    Account Details</h4>
+                <div class="grid-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>Username<span style="color: red;">*</span></label>
+                        <input type="text" name="username" required placeholder="User Name">
+                    </div>
+                    <div class="form-group">
+                        <label>Password<span style="color: red;">*</span></label>
+                        <input type="password" name="password" required placeholder="Enter password">
+                        <small style="font-size: 10px; color: var(--text-soft);">6-15 Characters</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Confirm password<span style="color: red;">*</span></label>
+                        <input type="password" name="confirm_password" required placeholder="Re enter password">
+                    </div>
+                </div>
+                <div class="form-group" style="max-width: 33%; margin-top: 15px;">
+                    <label>FirmName<span style="color: red;">*</span></label>
+                    <input type="text" name="firm_name" required placeholder="Enter name of your Orgnization">
+                </div>
+
+                <!-- Contact Information -->
+                <h4
+                    style="font-size: 14px; margin-top: 20px; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 5px;">
+                    Contact Information</h4>
+                <div class="grid-2" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label>LandLine No.</label>
+                        <input type="text" name="landline_no" placeholder="0423xxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label>FirmEmail<span style="color: red;">*</span></label>
+                        <input type="email" name="firm_email" required placeholder="Enter email of Firm">
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 10px; margin-top: 20px;">
+                    <input type="checkbox" id="terms" name="terms" required style="width: auto; margin-right: 8px;">
+                    <label for="terms"
+                        style="font-size: 12px; margin: 0; text-transform: none; letter-spacing: normal;">I Agree with
+                        the <a href="#" style="color: var(--sapphire);">Terms and Conditions</a> of Acceptable
+                        Use</label>
+                </div>
+
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn btn-secondary" id="cancelModalBtn">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Firm & Owner</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const modal = document.getElementById('createFirmModal');
+    const openBtn = document.getElementById('openCreateModal');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const cancelBtn = document.getElementById('cancelModalBtn');
+
+    function openModal() { modal.classList.add('active'); }
+    function closeModal() { modal.classList.remove('active'); }
+
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', closeModal);
+    cancelBtn.addEventListener('click', closeModal);
+
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeModal();
+    });
+
+    const form = modal.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', () => {
+            const emailInput = form.querySelector('input[name="email"]');
+            if (emailInput) {
+                let confirmInput = form.querySelector('input[name="confirm_email"]');
+                if (!confirmInput) {
+                    confirmInput = document.createElement('input');
+                    confirmInput.type = 'hidden';
+                    confirmInput.name = 'confirm_email';
+                    form.appendChild(confirmInput);
+                }
+                confirmInput.value = emailInput.value;
+            }
+        });
+    }
+
+    // Chart.js Integrations
+    const firmMonthsLabels = {{ firm_months_labels| safe }};
+    const firmMonthsCounts = {{ firm_months_counts| safe }};
+    const firmNames = {{ firm_names| safe }};
+    const firmCasesCounts = {{ firm_cases_counts| safe }};
+    const firmUsersCounts = {{ firm_users_counts| safe }};
+
+    // 1. Firms Registered Per Month
+    new Chart(document.getElementById('firmsMonthChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: firmMonthsLabels,
+            datasets: [{
+                label: 'Registered Firms',
+                data: firmMonthsCounts,
+                backgroundColor: 'rgba(30, 58, 138, 0.7)',
+                borderColor: '#1e3a8a',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+
+    // 2. Cases Per Firm
+    new Chart(document.getElementById('firmCasesChart').getContext('2d'), {
+        type: 'bar',
+        data: {
+            labels: firmNames,
+            datasets: [{
+                label: 'Total Cases',
+                data: firmCasesCounts,
+                backgroundColor: 'rgba(71, 85, 105, 0.7)',
+                borderColor: '#475569',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: { beginAtZero: true, ticks: { stepSize: 1 } }
+            }
+        }
+    });
+
+    // 3. Users Per Firm
+    new Chart(document.getElementById('firmUsersChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: firmNames,
+            datasets: [{
+                data: firmUsersCounts,
+                backgroundColor: [
+                    '#1e3a8a', '#475569', '#7f1d1d', '#b45309', '#14532d', '#334155', '#e2e8f0', '#0f172a'
+                ],
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { position: 'right' }
+            }
+        }
+    });
+
+    // Real-Time Search & Highlight Filtering Engine
+    let currentFilter = 'all';
+
+    window.setFirmFilter = function (filterType, element) {
+        document.querySelectorAll('.firm-filter-pill').forEach(pill => {
+            pill.classList.remove('active');
+        });
+        element.classList.add('active');
+
+        currentFilter = filterType;
+        filterFirms();
+    };
+
+    window.filterFirms = function () {
+        const searchInput = document.getElementById('firmSearchInput');
+        if (!searchInput) return;
+
+        const query = searchInput.value.toLowerCase().trim();
+        const cards = document.querySelectorAll('.firm-card');
+        const rows = document.querySelectorAll('.firm-row');
+
+        let visibleCardsCount = 0;
+        let visibleRowsCount = 0;
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g,
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        function highlightText(element, originalText, matchTerm) {
+            if (!matchTerm) {
+                element.textContent = originalText;
+                return;
+            }
+
+            const index = originalText.toLowerCase().indexOf(matchTerm);
+            if (index >= 0) {
+                const start = originalText.substring(0, index);
+                const middle = originalText.substring(index, index + matchTerm.length);
+                const end = originalText.substring(index + matchTerm.length);
+                element.innerHTML = `${escapeHTML(start)}<mark class="search-highlight">${escapeHTML(middle)}</mark>${escapeHTML(end)}`;
+            } else {
+                element.textContent = originalText;
+            }
+        }
+
+        cards.forEach(card => {
+            const nameEl = card.querySelector('.firm-name');
+            const originalName = nameEl ? nameEl.getAttribute('data-original-name') : '';
+            const regNoEl = card.querySelector('.firm-reg-no span');
+            const regNo = regNoEl ? regNoEl.textContent.toLowerCase() : '';
+            const statusEl = card.querySelector('.firm-row-status') || card.querySelector('.firm-status');
+            const isActive = statusEl ? statusEl.textContent.trim().toLowerCase() === 'active' : true;
+
+            let matchesFilter = true;
+            if (currentFilter === 'test') {
+                matchesFilter = originalName.toLowerCase().includes('test');
+            } else if (currentFilter === 'active') {
+                matchesFilter = isActive;
+            } else if (currentFilter === 'inactive') {
+                matchesFilter = !isActive;
+            }
+
+            let matchesSearch = true;
+            const cardText = card.textContent.toLowerCase();
+            if (query) {
+                matchesSearch = originalName.toLowerCase().includes(query) || regNo.includes(query) || cardText.includes(query);
+            }
+
+            if (matchesFilter && matchesSearch) {
+                card.style.display = 'flex';
+                visibleCardsCount++;
+
+                if (nameEl) {
+                    if (currentFilter === 'test' && !query) {
+                        highlightText(nameEl, originalName, 'test');
+                    } else {
+                        highlightText(nameEl, originalName, query);
+                    }
+                }
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        rows.forEach(row => {
+            const nameEl = row.querySelector('.firm-row-name');
+            const originalName = nameEl ? nameEl.getAttribute('data-original-name') : '';
+            const regNoEl = row.querySelector('.firm-row-reg');
+            const regNo = regNoEl ? regNoEl.textContent.toLowerCase() : '';
+            const statusEl = row.querySelector('.firm-row-status');
+            const isActive = statusEl ? statusEl.textContent.trim().toLowerCase() === 'active' : true;
+
+            let matchesFilter = true;
+            if (currentFilter === 'test') {
+                matchesFilter = originalName.toLowerCase().includes('test');
+            } else if (currentFilter === 'active') {
+                matchesFilter = isActive;
+            } else if (currentFilter === 'inactive') {
+                matchesFilter = !isActive;
+            }
+
+            let matchesSearch = true;
+            const rowText = row.textContent.toLowerCase();
+            if (query) {
+                matchesSearch = originalName.toLowerCase().includes(query) || regNo.includes(query) || rowText.includes(query);
+            }
+
+            if (matchesFilter && matchesSearch) {
+                row.style.display = '';
+                visibleRowsCount++;
+
+                if (nameEl) {
+                    if (currentFilter === 'test' && !query) {
+                        highlightText(nameEl, originalName, 'test');
+                    } else {
+                        highlightText(nameEl, originalName, query);
+                    }
+                }
+            } else {
+                row.style.display = 'none';
+            }
+        });
+
+        const gridEmpty = document.getElementById('firmGridEmptyState');
+        const gridContainer = document.querySelector('.firm-grid');
+        if (visibleCardsCount === 0) {
+            if (gridContainer) gridContainer.style.display = 'none';
+            if (gridEmpty) gridEmpty.style.display = 'block';
+        } else {
+            if (gridContainer) gridContainer.style.display = 'grid';
+            if (gridEmpty) gridEmpty.style.display = 'none';
+        }
+
+        const tableEmpty = document.getElementById('firmTableEmptyState');
+        const tableContainer = document.querySelector('.firm-row') ? document.querySelector('.firm-row').closest('table') : null;
+        if (visibleRowsCount === 0) {
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (tableEmpty) tableEmpty.style.display = 'block';
+        } else {
+            if (tableContainer) tableContainer.style.display = 'table';
+            if (tableEmpty) tableEmpty.style.display = 'none';
+        }
+    };
+</script>
+{% endblock %}

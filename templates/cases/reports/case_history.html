@@ -1,0 +1,68 @@
+{% extends "cases/reports/base_report.html" %}
+
+{% block report_title %}
+<i class="fas fa-history" style="color: var(--sapphire); margin-right: 8px;"></i> Case History Report
+{% endblock %}
+
+{% block export_buttons %}
+<a href="{% url 'export_report' 'case_history' 'excel' %}" class="btn-export btn-export-excel">
+    <i class="fas fa-file-excel"></i> Export Excel
+</a>
+<a href="{% url 'export_report' 'case_history' 'pdf' %}" class="btn-export btn-export-pdf">
+    <i class="fas fa-file-pdf"></i> Export PDF
+</a>
+{% endblock %}
+
+{% block report_body %}
+<p style="font-size: 14px; color: var(--text-soft); margin-bottom: 20px;">Complete timeline and history across all your assigned cases.</p>
+
+<div class="accordion" id="caseHistoryAccordion">
+    {% for case in cases %}
+    <div style="border: 1px solid var(--border); border-radius: 8px; margin-bottom: 12px; overflow: hidden;">
+        <div style="padding: 16px 20px; background: var(--bg); cursor: pointer; display: flex; justify-content: space-between; align-items: center;" onclick="toggleAccordion('case-{{ case.pk }}')">
+            <div>
+                <div style="font-weight: 700; color: var(--text); font-size: 15px;">{{ case.title|default:"Untitled Case" }} <span style="font-size: 12px; color: var(--text-soft); font-weight: normal; margin-left: 8px;">{{ case.case_number|default:"" }}</span></div>
+                <div style="font-size: 12px; color: var(--text-soft); margin-top: 4px;">Status: {{ case.get_status_display }} | Client: {{ case.client.full_name|default:"N/A" }} | Filing Date: {{ case.filing_date|default:case.created_at.date }}</div>
+            </div>
+            <i class="fas fa-chevron-down" style="color: var(--text-soft);" id="icon-case-{{ case.pk }}"></i>
+        </div>
+        <div id="case-{{ case.pk }}" style="display: none; padding: 20px; background: var(--card); border-top: 1px solid var(--border);">
+            {% if case.activities.all %}
+                <div style="position: relative; padding-left: 20px; border-left: 2px solid var(--border);">
+                    {% for activity in case.activities.all %}
+                    <div style="position: relative; margin-bottom: 20px;">
+                        <div style="position: absolute; left: -26px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--sapphire);"></div>
+                        <div style="font-size: 12px; font-weight: 700; color: var(--text-mid); margin-bottom: 4px;">{{ activity.timestamp|date:"d-M-Y H:i" }} - {{ activity.user.get_full_name|default:activity.user.username }}</div>
+                        <div style="font-size: 14px; color: var(--text);">{{ activity.action }}</div>
+                        {% if activity.note %}
+                        <div style="font-size: 13px; color: var(--text-soft); margin-top: 4px; padding: 8px; background: var(--bg); border-radius: 4px;">{{ activity.note }}</div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="color: var(--text-soft); font-size: 13px; text-align: center; padding: 20px;">No history recorded for this case yet.</div>
+            {% endif %}
+        </div>
+    </div>
+    {% empty %}
+    <div style="text-align: center; padding: 40px; color: var(--text-soft);">No cases available.</div>
+    {% endfor %}
+</div>
+
+<script>
+    function toggleAccordion(id) {
+        var element = document.getElementById(id);
+        var icon = document.getElementById('icon-' + id);
+        if (element.style.display === "none") {
+            element.style.display = "block";
+            icon.classList.remove('fa-chevron-down');
+            icon.classList.add('fa-chevron-up');
+        } else {
+            element.style.display = "none";
+            icon.classList.remove('fa-chevron-up');
+            icon.classList.add('fa-chevron-down');
+        }
+    }
+</script>
+{% endblock %}

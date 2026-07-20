@@ -1,0 +1,185 @@
+{% extends "base/dashboard_base.html" %}
+{% block title %}Staff Management - Law Firm Management{% endblock %}
+{% block page_title %}Staff Management{% endblock %}
+
+{% block extra_css %}
+<style>
+    .staff-av { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent2)); display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#fff; flex-shrink:0; }
+    .status-pill { display:inline-flex; align-items:center; gap:5px; padding:4px 11px; border-radius:20px; font-size:11px; font-weight:700; }
+    .status-pill::before { content:''; width:6px; height:6px; border-radius:50%; }
+    .status-pill.active   { background:var(--emerald-l); color:#065f46; }
+    .status-pill.active::before   { background:var(--emerald); }
+    .status-pill.inactive { background:#f1f5f9; color:#475569; }
+    .status-pill.inactive::before { background:#94a3b8; }
+    .empty-state { padding:56px 22px; text-align:center; color:var(--text-soft); }
+    .empty-state i { font-size:36px; opacity:.18; display:block; margin-bottom:14px; }
+    .empty-state strong { font-size:14px; color:var(--text-mid); display:block; margin-bottom:4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Staff <span>Management</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-people-group" style="color:var(--sapphire)"></i>
+            Manage all team members in your firm
+        </div>
+    </div>
+    <a href="{% url 'staff_create' %}" class="btn btn-primary">
+        <i class="fas fa-plus me-1"></i> Add New Staff
+    </a>
+</div>
+
+<div class="panel">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-users-cog" style="color:var(--accent2)"></i>
+            Firm Employees
+            <span style="background:var(--bg);border:1px solid var(--border);color:var(--text-mid);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">
+                {{ employees.count }}
+            </span>
+        </div>
+    </div>
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-user me-1"></i> Name</th>
+                    <th style="text-align:center"><i class="fas fa-id-badge me-1"></i> Role</th>
+                    <th><i class="fas fa-envelope me-1"></i> Email</th>
+                    <th><i class="fas fa-phone me-1"></i> Phone</th>
+                    <th style="text-align:center"><i class="fas fa-circle-dot me-1"></i> Status</th>
+                    <th style="text-align:center"><i class="fas fa-cogs me-1"></i> Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in employees %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div class="staff-av">{{ u.get_full_name|first|default:u.username|first|upper }}</div>
+                            <div>
+                                <div style="font-size:14px;font-weight:700;color:var(--text)">{% if u.first_name or u.last_name %}{{ u.first_name }} {{ u.last_name }}{% else %}{{ u.username }}{% endif %}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align:center">
+                        <span style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px">
+                            {{ u.get_role_display }}
+                        </span>
+                    </td>
+                    <td style="font-size:13px;color:var(--text-mid)">{{ u.email|default:"—" }}</td>
+                    <td style="font-size:13px;color:var(--text-mid)">{{ u.phone_number|default:"—" }}</td>
+                    <td style="text-align:center">
+                        {% if u.is_active %}
+                        <span class="status-pill active">Active</span>
+                        {% else %}
+                        <span class="status-pill inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:center">
+                        <div style="display:flex;gap:6px;justify-content:center">
+                            <form method="POST" action="{% url 'toggle_user_status' u.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm {% if u.is_active %}btn-secondary{% else %}btn-success{% endif %}" title="{% if u.is_active %}Deactivate{% else %}Activate{% endif %}" {% if request.user == u %}disabled{% endif %}>
+                                    <i class="fas {% if u.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                </button>
+                            </form>
+                            <a href="{% url 'staff_update' u.id %}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'staff_delete' u.id %}" class="btn btn-sm btn-danger" title="Delete"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <i class="fas fa-people-group"></i>
+                            <strong>No employees found</strong>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="panel" style="margin-top: 30px;">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-handshake" style="color:var(--emerald)"></i>
+            Firm Clients
+            <span style="background:var(--bg);border:1px solid var(--border);color:var(--text-mid);font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px">
+                {{ clients.count }}
+            </span>
+        </div>
+    </div>
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr>
+                    <th><i class="fas fa-user me-1"></i> Name</th>
+                    <th style="text-align:center"><i class="fas fa-id-badge me-1"></i> Role</th>
+                    <th><i class="fas fa-envelope me-1"></i> Email</th>
+                    <th><i class="fas fa-phone me-1"></i> Phone</th>
+                    <th style="text-align:center"><i class="fas fa-circle-dot me-1"></i> Status</th>
+                    <th style="text-align:center"><i class="fas fa-cogs me-1"></i> Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in clients %}
+                <tr>
+                    <td>
+                        <div style="display:flex;align-items:center;gap:10px">
+                            <div class="staff-av" style="background:linear-gradient(135deg,var(--emerald),var(--emerald-l));">{{ u.get_full_name|first|default:u.username|first|upper }}</div>
+                            <div>
+                                <div style="font-size:14px;font-weight:700;color:var(--text)">{% if u.first_name or u.last_name %}{{ u.first_name }} {{ u.last_name }}{% else %}{{ u.username }}{% endif %}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="text-align:center">
+                        <span style="background:var(--emerald-l);color:var(--emerald);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px">
+                            {{ u.get_role_display }}
+                        </span>
+                    </td>
+                    <td style="font-size:13px;color:var(--text-mid)">{{ u.email|default:"—" }}</td>
+                    <td style="font-size:13px;color:var(--text-mid)">{{ u.phone_number|default:"—" }}</td>
+                    <td style="text-align:center">
+                        {% if u.is_active %}
+                        <span class="status-pill active">Active</span>
+                        {% else %}
+                        <span class="status-pill inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:center">
+                        <div style="display:flex;gap:6px;justify-content:center">
+                            <form method="POST" action="{% url 'toggle_user_status' u.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm {% if u.is_active %}btn-secondary{% else %}btn-success{% endif %}" title="{% if u.is_active %}Deactivate{% else %}Activate{% endif %}" {% if request.user == u %}disabled{% endif %}>
+                                    <i class="fas {% if u.is_active %}fa-user-slash{% else %}fa-user-check{% endif %}"></i>
+                                </button>
+                            </form>
+                            <a href="{% url 'staff_update' u.id %}" class="btn btn-sm btn-warning" title="Edit"><i class="fas fa-edit"></i></a>
+                            <a href="{% url 'staff_delete' u.id %}" class="btn btn-sm btn-danger" title="Delete"><i class="fas fa-trash"></i></a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">
+                        <div class="empty-state">
+                            <i class="fas fa-people-group"></i>
+                            <strong>No clients found</strong>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,107 @@
+{% extends "base/base.html" %}
+{% block content %}
+<div class="container-fluid px-4 py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">Supreme Court Judgments</h2>
+            <p class="text-muted small mb-0">Browse and search historical case archives by presiding justice.</p>
+        </div>
+        <div class="bg-light p-3 rounded shadow-sm text-center">
+            <span class="d-block text-uppercase text-muted tracking-wider" style="font-size: 10px; font-weight: bold;">Total Archiver Records</span>
+            <span class="fs-4 fw-bold text-primary">{{ judgments.count }}</span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div class="card-header bg-dark text-white py-3">
+                    <h6 class="mb-0 font-weight-bold"><i class="fas fa-gavel me-2"></i> Justices</h6>
+                </div>
+                <div class="list-group list-group-flush" style="max-height: 600px; overflow-y: auto;">
+                    <a href="{% url 'legal_library:judgments_list' %}" class="list-group-item list-group-item-action {% if not current_justice %}active{% endif %} d-flex justify-content-between align-items-center">
+                        All Records
+                    </a>
+                    {% for justice in justices %}
+                        <a href="?justice={{ justice.id }}" class="list-group-item list-group-item-action {% if current_justice.id == justice.id %}active{% endif %} d-flex justify-content-between align-items-center small">
+                            {{ justice.name }}
+                            <span class="badge rounded-pill bg-secondary text-white small" style="font-size: 10px;">{{ justice.judgments.count }}</span>
+                        </a>
+                    {% empty %}
+                        <div class="p-3 text-center text-muted small">No justices found.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="card border-0 shadow-sm p-3 mb-4 rounded-3">
+                <form method="GET" action="" class="row g-2">
+                    {% if current_justice %}
+                        <input type="hidden" name="justice" value="{{ current_justice.id }}">
+                    {% endif %}
+                    <div class="col-md-9">
+                        <div class="input-group">
+                            <span class="input-group-text bg-white border-end-0 text-muted"><i class="fas fa-search"></i></span>
+                            <input type="text" name="q" value="{{ request.GET.q|default:'' }}" class="form-control border-start-0 ps-0" placeholder="Search judgments by file name or keyword...">
+                        </div>
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <button type="submit" class="btn btn-primary font-weight-bold">Search Library</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-3 overflow-hidden">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light text-uppercase tracking-wider text-muted" style="font-size: 11px;">
+                            <tr>
+                                <th class="ps-4" style="width: 55%;">Document Title / Case Reference</th>
+                                <th style="width: 25%;">Assigned Bench</th>
+                                <th class="pe-4 text-end" style="width: 20%;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for judgment in judgments %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center">
+                                            <div class="me-3 fs-3 text-danger"><i class="far fa-file-pdf"></i></div>
+                                            <div>
+                                                <span class="d-block fw-bold text-dark text-break">{{ judgment.title }}</span>
+                                                <small class="text-muted">Imported: {{ judgment.uploaded_at|date:"M d, Y" }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-light text-dark border px-2.5 py-1.5 rounded-2 small fw-normal">
+                                            {{ judgment.justice.name }}
+                                        </span>
+                                    </td>
+                                    <td class="pe-4 text-end">
+                                        <a href="{{ judgment.pdf_file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary me-1" title="View Document">
+                                            <i class="far fa-eye"></i>
+                                        </a>
+                                        <a href="{{ judgment.pdf_file.url }}" download class="btn btn-sm btn-primary" title="Download PDF">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5">
+                                        <div class="text-muted mb-2"><i class="fas fa-folder-open fs-1"></i></div>
+                                        <h6 class="fw-bold mb-1">No Judgments Found</h6>
+                                        <p class="text-muted small mb-0">Try clearing your filters or sharpening your search keywords.</p>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

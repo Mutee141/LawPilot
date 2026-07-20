@@ -1,0 +1,204 @@
+{% extends "base/base.html" %}
+
+{% block title %}{% if staff_member %}Edit Staff{% else %}Add Staff Member{% endif %} - Law Firm Management{% endblock %}
+{% block page_title %}{% if staff_member %}Edit Staff Member{% else %}Add New Staff Member{% endif %}{% endblock %}
+
+{% block content %}
+
+<div class="row mb-4">
+    <div class="col-12">
+        <a href="{% url 'staff_list' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-arrow-left"></i> Back to Staff
+        </a>
+    </div>
+</div>
+
+<form method="post" id="staffForm" novalidate>
+    {% csrf_token %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-user-plus"></i> {% if staff_member %}Edit Staff Member{% else %}Add New Staff Member{% endif %}
+            </div>
+            <div class="card-body">
+                {% if errors %}
+                    <div class="alert alert-danger mb-3">
+                        <strong><i class="fas fa-exclamation-circle"></i> Errors:</strong>
+                        <ul class="mb-0">
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+                    
+                {% if errors %}
+                    <div class="alert alert-danger mb-3">
+                        <strong><i class="fas fa-exclamation-circle"></i> Errors:</strong>
+                        <ul class="mb-0">
+                            {% for error in errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>First Name</strong></label>
+                            <input type="text" name="first_name" class="form-control" 
+                                   value="{% if staff_member %}{{ staff_member.first_name }}{% elif form_data %}{{ form_data.first_name }}{% endif %}" 
+                                   placeholder="First name">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Last Name</strong></label>
+                            <input type="text" name="last_name" class="form-control" 
+                                   value="{% if staff_member %}{{ staff_member.last_name }}{% elif form_data %}{{ form_data.last_name }}{% endif %}" 
+                                   placeholder="Last name">
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Username</strong></label>
+                            <input type="text" name="username" class="form-control" 
+                                   value="{% if staff_member %}{{ staff_member.username }}{% elif form_data %}{{ form_data.username }}{% endif %}" 
+                                   placeholder="Username" 
+                                   {% if staff_member %}disabled{% else %}required{% endif %}>
+                            <small class="text-muted d-block mt-1">
+                                {% if staff_member %}Username cannot be changed after creation{% else %}Unique identifier for login{% endif %}
+                            </small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Email</strong></label>
+                            <input type="email" name="email" class="form-control" 
+                                   value="{% if staff_member %}{{ staff_member.email }}{% elif form_data %}{{ form_data.email }}{% endif %}" 
+                                   placeholder="Email address" required>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Phone Number</strong></label>
+                            <input type="tel" name="phone_number" class="form-control" 
+                                   value="{% if staff_member %}{{ staff_member.phone_number }}{% elif form_data %}{{ form_data.phone_number }}{% endif %}" 
+                                   placeholder="Phone number">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label"><strong>Role</strong></label>
+                            <select name="role" class="form-select" required>
+                                <option value="">-- Select Role --</option>
+                                {% for value, label in roles %}
+                                    <option value="{{ value }}" 
+                                            {% if staff_member.role == value or form_data.role == value %}selected{% endif %}>
+                                        {{ label }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> {% if staff_member %}Update Staff{% else %}Add Staff Member{% endif %}
+                        </button>
+                        <a href="{% url 'staff_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> Available Roles
+            </div>
+            <div class="card-body">
+                <ul style="font-size: 13px; list-style: none; padding: 0;">
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                        <strong>Firm Owner</strong><br>
+                        <small class="text-muted">Full system access</small>
+                    </li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                        <strong>Senior Lawyer</strong><br>
+                        <small class="text-muted">Manage cases & team</small>
+                    </li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                        <strong>Junior Lawyer</strong><br>
+                        <small class="text-muted">Handle assigned cases</small>
+                    </li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #eee;">
+                        <strong>Assistant</strong><br>
+                        <small class="text-muted">Support documents & tasks</small>
+                    </li>
+                    <li style="padding: 8px 0;">
+                        <strong>Accountant</strong><br>
+                        <small class="text-muted">Manage billing & payments</small>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        {% if not staff_member %}
+        <div class="card mt-3">
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-key"></i> New Password
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" style="font-weight: 700; font-size: 13px;">Set Password *</label>
+                    <input type="password" name="password" form="staffForm" class="form-control" required placeholder="User will log in with this password">
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card mt-3">
+            <div class="card-header text-white" style="background-color: var(--sapphire-l); color: var(--sapphire) !important; border: 1px solid var(--sapphire);">
+                <i class="fas fa-lock"></i> Password Management
+            </div>
+            <div class="card-body" style="padding: 16px;">
+                <p style="font-size: 13px; color: var(--text-mid); margin-top: 0;">As Firm Owner you can force update the password of this user if they forgot it.</p>
+                <button type="button" class="btn btn-sm" style="background: var(--sapphire); color: white; width: 100%; border-radius: 6px;" onclick="document.getElementById('resetPasswordModal').classList.add('active');">
+                    <i class="fas fa-key"></i> Set New Password
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</form>
+
+<!-- Modal for Resetting Password -->
+{% if staff_member %}
+<div class="modal-overlay" id="resetPasswordModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: var(--card); border-radius: 12px; width: 100%; max-width: 400px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
+        <h5 style="margin-top: 0;"><i class="fas fa-key" style="color: var(--sapphire)"></i> Reset User Password</h5>
+        <p style="font-size: 13px; color: var(--text-mid);">Enter a new password for {{ staff_member.username }}.</p>
+        <form method="post" action="{% url 'staff_reset_password' staff_member.id %}">
+            {% csrf_token %}
+            <div style="margin-bottom: 20px;">
+                <input type="password" name="new_password" class="form-control" required placeholder="Enter new password">
+            </div>
+            <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('resetPasswordModal').classList.remove('active'); document.getElementById('resetPasswordModal').style.display = 'none';">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">Update Password</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+    // Trigger display toggle purely for CSS overrides, if we use display:none standardly
+    document.getElementById('resetPasswordModal').style.display = '';
+    document.getElementById('resetPasswordModal').classList.remove('active');
+    
+    // Add simple CSS for modal active state if we need it
+    const style = document.createElement('style');
+    style.innerHTML = '.modal-overlay.active { display: flex !important; }';
+    document.head.appendChild(style);
+</script>
+{% endif %}
+
+{% endblock %}

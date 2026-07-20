@@ -1,0 +1,236 @@
+{% extends "base/auth_base.html" %}
+
+{% block title %}Create Account — Juridex Law Firm Pro{% endblock %}
+
+{% block auth_title %}Create Your Account{% endblock %}
+{% block auth_subtitle %}Join your firm on the Juridex platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Signup-specific overrides */
+    body { overflow-x: hidden; }
+    .auth-form-wrap { max-width: 520px; width: 100%; }
+    .auth-right { min-width: 0; }
+    .auth-left { width: clamp(320px, 38vw, 480px); }
+
+    @media (max-width: 960px) {
+        .auth-left { width: clamp(300px, 45vw, 420px); }
+    }
+
+    /* Floating label effect for signup fields */
+    .field-group { margin-bottom: 20px; }
+
+    .field-group label.auth-label {
+        display: block;
+        margin-bottom: 7px;
+    }
+
+    /* Role select info box */
+    .role-info-box {
+        background: var(--sapphire-l);
+        border: 1px solid #bfdbfe;
+        border-left: 3px solid var(--sapphire);
+        border-radius: 0 8px 8px 0;
+        padding: 9px 13px;
+        margin-top: 8px;
+        font-size: 12px; color: #1e3a8a;
+        display: flex; align-items: flex-start; gap: 7px;
+    }
+
+    /* Two-column grid for name fields on larger screens */
+    .fields-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+    }
+    @media (max-width: 480px) {
+        .fields-row { grid-template-columns: 1fr; }
+    }
+
+    /* Password strength indicator */
+    .pwd-strength {
+        display: flex; gap: 4px; margin-top: 7px;
+    }
+    .pwd-bar {
+        flex: 1; height: 3px; border-radius: 2px;
+        background: var(--border);
+        transition: background .3s;
+    }
+
+    /* Field icon wrapper */
+    .field-icon-wrap { position: relative; }
+    .field-icon-wrap .auth-input { padding-left: 40px; }
+    .field-icon-wrap .f-icon {
+        position: absolute; left: 13px; top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-soft); font-size: 13px;
+        pointer-events: none;
+    }
+</style>
+{% endblock %}
+
+{% block auth_content %}
+
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    {% for field in form %}
+    <div class="field-group">
+
+        {% if field.name == 'first_name' or field.name == 'last_name' %}
+        {# These will be rendered inside a row below — skip here #}
+        {% endif %}
+
+        {% if field.name == 'role' %}
+            <!-- Role field -->
+            <label class="auth-label" for="{{ field.id_for_label }}">
+                <i class="fas fa-user-tag me-1"></i> {{ field.label }}
+            </label>
+            <div class="field-icon-wrap">
+                <i class="fas fa-user-tag f-icon"></i>
+                <div style="padding-left: 40px;">
+                    {{ field }}
+                </div>
+            </div>
+            <div class="role-info-box">
+                <i class="fas fa-circle-info" style="margin-top:1px;flex-shrink:0"></i>
+                Select your primary role. You can adjust this after creating your firm.
+            </div>
+
+        {% elif field.name == 'email' %}
+            <label class="auth-label" for="{{ field.id_for_label }}">
+                <i class="fas fa-envelope me-1"></i> {{ field.label }}
+            </label>
+            <div class="field-icon-wrap">
+                <i class="fas fa-envelope f-icon"></i>
+                {{ field }}
+            </div>
+
+        {% elif field.name == 'password1' %}
+            <label class="auth-label" for="{{ field.id_for_label }}">
+                <i class="fas fa-lock me-1"></i> {{ field.label }}
+            </label>
+            <div class="field-icon-wrap">
+                <i class="fas fa-lock f-icon"></i>
+                {{ field }}
+            </div>
+            <div class="pwd-strength" id="pwdStrength">
+                <div class="pwd-bar"></div>
+                <div class="pwd-bar"></div>
+                <div class="pwd-bar"></div>
+                <div class="pwd-bar"></div>
+            </div>
+
+        {% elif field.name == 'password2' %}
+            <label class="auth-label" for="{{ field.id_for_label }}">
+                <i class="fas fa-lock me-1"></i> {{ field.label }}
+            </label>
+            <div class="field-icon-wrap">
+                <i class="fas fa-lock f-icon"></i>
+                {{ field }}
+            </div>
+
+        {% elif field.name == 'phone' %}
+            <label class="auth-label" for="{{ field.id_for_label }}">
+                <i class="fas fa-phone me-1"></i> {{ field.label }}
+            </label>
+            <div class="field-icon-wrap">
+                <i class="fas fa-phone f-icon"></i>
+                {{ field }}
+            </div>
+
+        {% elif field.name == 'username' %}
+            <label class="auth-label" for="{{ field.id_for_label }}">
+                <i class="fas fa-at me-1"></i> {{ field.label }}
+            </label>
+            <div class="field-icon-wrap">
+                <i class="fas fa-at f-icon"></i>
+                {{ field }}
+            </div>
+
+        {% else %}
+            <label class="auth-label" for="{{ field.id_for_label }}">
+                <i class="fas fa-pen me-1"></i> {{ field.label }}
+            </label>
+            <div class="field-icon-wrap">
+                <i class="fas fa-pen f-icon"></i>
+                {{ field }}
+            </div>
+        {% endif %}
+
+        {% if field.errors %}
+        <div class="auth-error mt-2">
+            <i class="fas fa-triangle-exclamation"></i>
+            {{ field.errors|striptags }}
+        </div>
+        {% endif %}
+
+        {% if field.help_text %}
+        <div class="auth-help mt-1">
+            <i class="fas fa-lightbulb me-1"></i>
+            {{ field.help_text|safe }}
+        </div>
+        {% endif %}
+
+    </div>
+    {% endfor %}
+
+    <button type="submit" class="auth-btn">
+        <i class="fas fa-user-plus"></i>
+        Create My Account
+    </button>
+</form>
+
+<div class="auth-divider">already have an account?</div>
+
+<div class="auth-footer">
+    <a href="{% url 'login' %}">
+        <i class="fas fa-arrow-right-to-bracket me-1"></i>Sign in here
+    </a>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // Style all Django-rendered form inputs
+    document.querySelectorAll('input, select, textarea').forEach(function(el) {
+        if (!el.classList.contains('auth-input')) {
+            el.classList.add('auth-input');
+        }
+    });
+
+    // Password strength indicator
+    const pwdInput = document.querySelector('input[name="password1"]');
+    const bars = document.querySelectorAll('#pwdStrength .pwd-bar');
+    const colors = ['#ef4444', '#f97316', '#eab308', '#22c55e'];
+
+    if (pwdInput && bars.length) {
+        pwdInput.addEventListener('input', function () {
+            const v = this.value;
+            let score = 0;
+            if (v.length >= 8)  score++;
+            if (/[A-Z]/.test(v)) score++;
+            if (/[0-9]/.test(v)) score++;
+            if (/[^A-Za-z0-9]/.test(v)) score++;
+            bars.forEach((bar, i) => {
+                bar.style.background = i < score ? colors[score - 1] : 'var(--border)';
+            });
+        });
+    }
+
+    // Add auth-input class to selects rendered by Django
+    document.querySelectorAll('select').forEach(function(el) {
+        el.style.width = '100%';
+        el.style.background = 'var(--bg)';
+        el.style.border = '1.5px solid var(--border)';
+        el.style.borderRadius = '10px';
+        el.style.padding = '11px 16px';
+        el.style.fontSize = '14px';
+        el.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
+        el.style.color = 'var(--text)';
+        el.style.outline = 'none';
+        el.style.appearance = 'none';
+    });
+});
+</script>
+
+{% endblock %}

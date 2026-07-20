@@ -1,0 +1,681 @@
+{% extends "base/dashboard_base.html" %}
+{% block page_title %}Senior Lawyer Dashboard{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.css" rel="stylesheet">
+<style>
+    /* ── FullCalendar Juridex overrides ── */
+    .fc {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 13px;
+    }
+
+    .fc .fc-toolbar-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 18px;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .fc .fc-button-primary {
+        background: var(--crimson) !important;
+        border-color: var(--crimson) !important;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 8px !important;
+        padding: 5px 14px;
+    }
+
+    .fc .fc-button-primary:not(:disabled):active,
+    .fc .fc-button-primary:not(:disabled).fc-button-active {
+        background: var(--crimson-d) !important;
+        border-color: var(--crimson-d) !important;
+    }
+
+    .fc .fc-daygrid-day-number {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-mid);
+    }
+
+    .fc .fc-col-header-cell-cushion {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: .5px;
+        text-transform: uppercase;
+        color: var(--text-soft);
+    }
+
+    .fc .fc-daygrid-day.fc-day-today {
+        background: rgba(255, 107, 0, .04) !important;
+    }
+
+    .fc-event {
+        border-radius: 5px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+        padding: 2px 5px !important;
+        cursor: pointer;
+    }
+
+    .fc-event:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, .2);
+        z-index: 100;
+    }
+
+    /* ── Hearing sidebar items ── */
+    .h-item {
+        display: flex;
+        align-items: stretch;
+        border-bottom: 1px solid var(--border);
+        transition: background .15s;
+        cursor: pointer;
+    }
+
+    .h-item:last-child {
+        border: none;
+    }
+
+    .h-item:hover {
+        background: #fafbff;
+    }
+
+    .h-stripe {
+        width: 4px;
+        flex-shrink: 0;
+    }
+
+    .h-body {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 13px 16px;
+        flex: 1;
+    }
+
+    .h-cal {
+        text-align: center;
+        width: 42px;
+        flex-shrink: 0;
+    }
+
+    .h-day {
+        font-family: 'Playfair Display', serif;
+        font-size: 22px;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .h-mon {
+        font-size: 9px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 1px;
+    }
+
+    .h-info {
+        flex: 1;
+    }
+
+    .h-case {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .h-meta {
+        font-size: 11px;
+        color: var(--text-soft);
+        margin-top: 3px;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .h-time {
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 4px 9px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--text-mid);
+        white-space: nowrap;
+        align-self: center;
+    }
+
+    /* ── Team table member avatar ── */
+    .member-av {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--accent), var(--accent2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+        flex-shrink: 0;
+    }
+
+    /* ── Empty state ── */
+    .empty-state {
+        padding: 36px 22px;
+        text-align: center;
+        color: var(--text-soft);
+    }
+
+    .empty-state i {
+        font-size: 28px;
+        opacity: .25;
+        display: block;
+        margin-bottom: 10px;
+    }
+
+    .empty-state p {
+        font-size: 13px;
+        margin: 0;
+    }
+
+    /* ── Today hearing pill ── */
+    .today-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        color: var(--amber);
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+
+    .upcoming-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: var(--sapphire-l);
+        border: 1px solid #bfdbfe;
+        color: var(--sapphire);
+        font-size: 10px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+
+    /* ── Page header tweak ── */
+    .ph-subtitle {
+        font-size: 13px;
+        color: var(--text-soft);
+        margin-top: 5px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══════════════════════ PAGE HEADER ══════════════════════ -->
+<div class="page-header">
+    <div>
+        <h3>Senior Lawyer <span>Dashboard</span></h3>
+        <div class="ph-subtitle">
+            <i class="fas fa-briefcase" style="color:var(--sapphire)"></i>
+            Track cases, hearings &amp; manage your junior team
+        </div>
+    </div>
+    <div style="display:flex;gap:10px">
+        <a href="{% url 'case_create' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus me-1"></i> New Case
+        </a>
+        <a href="{% url 'assign_task' %}" class="btn btn-secondary btn-sm">
+            <i class="fas fa-tasks me-1"></i> Assign Task
+        </a>
+    </div>
+</div>
+
+<!-- ══════════════════════ KPI CARDS ══════════════════════ -->
+<div class="kpi-grid" style="margin-bottom:22px">
+
+    <!-- Total Cases -->
+    <div class="kpi-card" style="border-left:4px solid var(--sapphire)">
+        <div class="kpi-top">
+            <div class="kpi-icon bl"><i class="fas fa-folder-open"></i></div>
+            <span class="kpi-trend neutral">Assigned</span>
+        </div>
+        <div class="kpi-val" style="color:var(--sapphire)">{{ total_cases|default:0 }}</div>
+        <div class="kpi-lbl">Total Cases</div>
+        <div class="kpi-bar">
+            <div class="kpi-bar-fill" style="width:75%;background:var(--sapphire)"></div>
+        </div>
+    </div>
+
+    <!-- Upcoming Hearings -->
+    <div class="kpi-card" style="border-left:4px solid var(--emerald)">
+        <div class="kpi-top">
+            <div class="kpi-icon gr"><i class="fas fa-calendar-check"></i></div>
+            <span class="kpi-trend up">Next 7 days</span>
+        </div>
+        <div class="kpi-val" style="color:var(--emerald)">{{ upcoming_hearings_count|default:0 }}</div>
+        <div class="kpi-lbl">Upcoming Hearings</div>
+        <div class="kpi-bar">
+            <div class="kpi-bar-fill" style="width:60%;background:var(--emerald)"></div>
+        </div>
+    </div>
+
+    <!-- Today's Hearings -->
+    <div class="kpi-card" style="border-left:4px solid var(--amber)">
+        <div class="kpi-top">
+            <div class="kpi-icon am"><i class="fas fa-bell"></i></div>
+            <span class="kpi-trend {% if todays_hearings_count > 0 %}down{% else %}up{% endif %}">Today</span>
+        </div>
+        <div class="kpi-val" style="color:var(--amber)">{{ todays_hearings_count|default:0 }}</div>
+        <div class="kpi-lbl">Today's Hearings</div>
+        <div class="kpi-bar">
+            <div class="kpi-bar-fill" style="width:40%;background:var(--amber)"></div>
+        </div>
+    </div>
+
+    <!-- Supervised Lawyers -->
+    <div class="kpi-card" style="border-left:4px solid var(--violet)">
+        <div class="kpi-top">
+            <div class="kpi-icon"
+                style="background:var(--violet-l);color:var(--violet);width:50px;height:50px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px">
+                <i class="fas fa-users"></i>
+            </div>
+            <span class="kpi-trend neutral" style="background:var(--violet-l);color:var(--violet)">Under you</span>
+        </div>
+        <div class="kpi-val" style="color:var(--violet)">{{ team_size|default:0 }}</div>
+        <div class="kpi-lbl">Supervised Lawyers</div>
+        <div class="kpi-bar">
+            <div class="kpi-bar-fill" style="width:50%;background:var(--violet)"></div>
+        </div>
+    </div>
+
+    <!-- Court Orders
+    <div class="kpi-card" style="border-left:4px solid var(--crimson)">
+        <div class="kpi-top">
+            <div class="kpi-icon cr"><i class="fas fa-gavel"></i></div>
+            <span class="kpi-trend up">This Month</span>
+        </div>
+        <div class="kpi-val" style="color:var(--crimson)">{{ court_orders_count|default:0 }}</div>
+        <div class="kpi-lbl">Court Orders</div>
+        <div class="kpi-bar">
+            <div class="kpi-bar-fill" style="width:65%;background:var(--crimson)"></div>
+        </div>
+    </div>
+    -->
+
+</div>
+
+<!-- ══════════════════════ QUICK ACTIONS ══════════════════════ 
+<div class="panel" style="margin-bottom:22px">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-bolt" style="color:var(--amber)"></i>
+            Quick Actions
+        </div>
+    </div>
+    <div class="quick-actions">
+        <a href="{% url 'case_create' %}" class="qa-btn red">
+            <i class="fas fa-plus"></i> New Case
+        </a>
+        <a href="{% url 'case_order_create' %}" class="qa-btn violet">
+            <i class="fas fa-gavel"></i> Court Order
+        </a>
+        <a href="{% url 'case_list' %}" class="qa-btn blue">
+            <i class="fas fa-folder"></i> All Cases
+        </a>
+        <a href="{% url 'hearing_list' %}" class="qa-btn green">
+            <i class="fas fa-calendar-plus"></i> Hearings
+        </a>
+        <a href="{% url 'staff_list' %}" class="qa-btn amber">
+            <i class="fas fa-people-group"></i> View Team
+        </a>
+    </div>
+</div>
+-->
+
+<!-- ══════════════════════ CALENDAR + HEARINGS SIDEBAR ══════════════════════ -->
+<div class="grid-2-1" style="margin-bottom:22px">
+
+    <!-- ── CALENDAR PANEL ── -->
+    <div class="panel">
+        <div class="panel-head">
+            <div class="panel-title">
+                <i class="fas fa-calendar-alt" style="color:var(--sapphire)"></i>
+                {% if month_name %}{{ month_name }} {{ year }} — {% endif %}Hearing Schedule
+            </div>
+        </div>
+        <div style="padding:20px">
+            <div id="calendar"></div>
+        </div>
+    </div>
+
+    <!-- ── RIGHT COLUMN: GRAPHS ── -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Case Status Graph -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-chart-pie" style="color:var(--sapphire)"></i>
+                    Cases by Status
+                </div>
+            </div>
+            <div
+                style="padding:20px; position:relative; height:260px; display:flex; align-items:center; justify-content:center;">
+                <canvas id="casesStatusChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Tasks Status Graph -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-chart-bar" style="color:var(--violet)"></i>
+                    Tasks by Status
+                </div>
+            </div>
+            <div
+                style="padding:20px; position:relative; height:260px; display:flex; align-items:center; justify-content:center;">
+                <canvas id="tasksStatusChart"></canvas>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- ══════════════════════ RECENT COURT ORDERS ══════════════════════ -->
+<div class="panel" style="margin-bottom:22px">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-gavel" style="color:var(--crimson)"></i>
+            Recent Court Orders
+        </div>
+        <a href="{% url 'case_order_list_senior' %}" class="panel-link">View all →</a>
+    </div>
+    <div style="padding:8px 0">
+        {% if recent_court_orders %}
+        {% for order in recent_court_orders %}
+        <div
+            style="display:flex;align-items:center;justify-content:space-between;padding:12px 22px;border-bottom:1px solid var(--border)">
+            <div>
+                <div style="font-size:12px;font-weight:700;color:var(--crimson)">{{ order.order_title }}</div>
+                <div style="font-size:13px;font-weight:500;color:var(--text);margin-top:2px">{{ order.case.case_number
+                    }} - {{ order.case.client.full_name }}</div>
+                <div style="font-size:11px;color:var(--text-soft);margin-top:1px">{{ order.get_order_type_display }}
+                </div>
+            </div>
+            <div style="text-align:right">
+                <div style="font-size:11px;color:var(--text-soft)">{{ order.order_date|date:"M d, Y" }}</div>
+                {% if order.order_document %}
+                <div style="margin-top:4px">
+                    <a href="{{ order.order_document.url }}" class="btn btn-sm btn-outline-success"
+                        style="font-size:10px;padding:2px 8px">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="padding:24px;text-align:center;color:var(--text-soft)">
+            <i class="fas fa-gavel" style="font-size:24px;opacity:.3;display:block;margin-bottom:8px"></i>
+            No recent court orders
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ══════════════════════ TEAM PERFORMANCE ══════════════════════ -->
+<div class="panel">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-chart-line" style="color:var(--violet)"></i>
+            Team Performance — Junior Lawyers
+        </div>
+        <a href="{% url 'assign_task' %}" class="btn btn-primary btn-sm">
+            <i class="fas fa-plus me-1"></i> Assign Task
+        </a>
+    </div>
+
+    {% if team_members %}
+    <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+            <thead>
+                <tr>
+                    <th style="padding:12px 22px;text-align:left">
+                        <i class="fas fa-user me-1"></i> Junior Lawyer
+                    </th>
+                    <th style="padding:12px 16px;text-align:center">
+                        <i class="fas fa-folder me-1"></i> Cases
+                    </th>
+                    <th style="padding:12px 16px;text-align:center">
+                        <i class="fas fa-tasks me-1"></i> Open Tasks
+                    </th>
+                    <th style="padding:12px 16px;text-align:center">
+                        <i class="fas fa-exclamation-circle me-1"></i> Overdue
+                    </th>
+                    <th style="padding:12px 16px;text-align:center">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in team_members %}
+                <tr>
+                    <td style="padding:14px 22px">
+                        <div style="display:flex;align-items:center;gap:12px">
+                            <div class="member-av">{{ member.name|first|upper }}</div>
+                            <div>
+                                <div style="font-size:14px;font-weight:700;color:var(--text)">{{ member.name }}</div>
+                                <div style="font-size:11px;color:var(--text-soft)">Junior Lawyer</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding:14px 16px;text-align:center">
+                        <span
+                            style="background:var(--sapphire-l);color:var(--sapphire);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px">
+                            {{ member.cases }}
+                        </span>
+                    </td>
+                    <td style="padding:14px 16px;text-align:center">
+                        <span
+                            style="background:var(--violet-l);color:var(--violet);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px">
+                            {{ member.tasks }}
+                        </span>
+                    </td>
+                    <td style="padding:14px 16px;text-align:center">
+                        {% if member.overdue > 0 %}
+                        <span
+                            style="background:var(--crimson-l);color:var(--crimson);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px">
+                            {{ member.overdue }}
+                        </span>
+                        {% else %}
+                        <span
+                            style="background:var(--emerald-l);color:var(--emerald);font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px">
+                            0
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding:14px 16px;text-align:center">
+                        {% if member.overdue > 0 %}
+                        <span
+                            style="background:var(--crimson-l);color:var(--crimson);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px">
+                            ⚠ Needs Attention
+                        </span>
+                        {% else %}
+                        <span
+                            style="background:var(--emerald-l);color:var(--emerald);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px">
+                            ✓ On Track
+                        </span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-users-slash"></i>
+        <p>No junior lawyers assigned to this firm yet.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Cases by Status Chart
+        var ctxCases = document.getElementById('casesStatusChart');
+        if (ctxCases) {
+            var caseLabels = {{ cases_by_status_labels|safe|default:"[]" }};
+            var caseData = {{ cases_by_status_counts|safe|default:"[]" }};
+
+            new Chart(ctxCases, {
+                type: 'doughnut',
+                data: {
+                    labels: caseLabels,
+                    datasets: [{
+                        data: caseData,
+                        backgroundColor: [
+                            '#1e3a8a', '#475569', '#7f1d1d', '#b45309', '#14532d', '#334155'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { 
+                            position: 'right', 
+                            labels: { 
+                                boxWidth: 12, 
+                                font: { size: 11, family: "'Plus Jakarta Sans', sans-serif" } 
+                            } 
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+
+        // Tasks by Status Chart
+        var ctxTasks = document.getElementById('tasksStatusChart');
+        if (ctxTasks) {
+            var taskLabels = {{ tasks_by_status_labels|safe|default:"[]" }};
+            var taskData = {{ tasks_by_status_counts|safe|default:"[]" }};
+
+            new Chart(ctxTasks, {
+                type: 'bar',
+                data: {
+                    labels: taskLabels,
+                    datasets: [{
+                        label: 'Tasks',
+                        data: taskData,
+                        backgroundColor: '#1e3a8a',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            ticks: { stepSize: 1, font: { size: 10 } } 
+                        },
+                        x: { 
+                            ticks: { font: { size: 11, family: "'Plus Jakarta Sans', sans-serif" } } 
+                        }
+                    }
+                }
+            });
+        }
+
+        // FullCalendar Schedule
+        var calendarEl = document.getElementById('calendar');
+        if (calendarEl) {
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                height: 480,
+                contentHeight: 'auto',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek'
+                },
+                dayMaxEvents: 3,
+                eventClick: function (info) {
+                    var p = info.event.extendedProps;
+                    alert('Case: ' + info.event.title + '\nTime: ' + (p.time || '') + '\nCourt: ' + (p.court || ''));
+                },
+                events: [
+                    {% for hearing in calendar_hearings %}
+                    // Hearing Date Event
+                    {
+                        id: '{{ hearing.id }}-main',
+                        title: '⚖ {{ hearing.case.case_number|default:"No Case #"|escapejs }} - {{ hearing.case.title|default:"No Title"|escapejs }} ({{ hearing.case.client.full_name|default:"No Client"|escapejs }})',
+                        start: '{{ hearing.hearing_date|date:"c" }}',
+                        {% if hearing.hearing_date|date:"Y-m-d" == today|date:"Y-m-d" %}
+                        backgroundColor: '#ef4444',
+                        borderColor: '#dc2626',
+                        {% elif hearing.hearing_date|date:"Y-m-d" < today|date:"Y-m-d" %}
+                        backgroundColor: '#94a3b8',
+                        borderColor: '#64748b',
+                        {% else %}
+                        backgroundColor: '#059669',
+                        borderColor: '#047857',
+                        {% endif %}
+                        textColor: '#fff',
+                        extendedProps: {
+                            court: '{{ hearing.case.court.name|default:"TBD"|escapejs }}',
+                            time: '{{ hearing.hearing_date|time:"H:i"|escapejs }}'
+                        }
+                    },
+                    {% if hearing.next_hearing_date %}
+                    // Next Hearing Date Event
+                    {
+                        id: '{{ hearing.id }}-next',
+                        title: '⚖ Next: {{ hearing.case.case_number|default:"No Case #"|escapejs }} - {{ hearing.case.title|default:"No Title"|escapejs }} ({{ hearing.case.client.full_name|default:"No Client"|escapejs }})',
+                        start: '{{ hearing.next_hearing_date|date:"c" }}',
+                        {% if hearing.next_hearing_date|date:"Y-m-d" == today|date:"Y-m-d" %}
+                        backgroundColor: '#ef4444',
+                        borderColor: '#dc2626',
+                        {% elif hearing.next_hearing_date|date:"Y-m-d" < today|date:"Y-m-d" %}
+                        backgroundColor: '#94a3b8',
+                        borderColor: '#64748b',
+                        {% else %}
+                        backgroundColor: '#3b82f6',
+                        borderColor: '#2563eb',
+                        {% endif %}
+                        textColor: '#fff',
+                        extendedProps: {
+                            court: '{{ hearing.case.court.name|default:"TBD"|escapejs }}',
+                            time: '{{ hearing.next_hearing_date|time:"H:i"|escapejs }}'
+                        }
+                    },
+                    {% endif %}
+                    {% endfor %}
+                ]
+            });
+            calendar.render();
+        }
+    });
+</script>
+{% endblock %}

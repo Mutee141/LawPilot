@@ -1,0 +1,375 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Juridex — Law Firm Management{% endblock %}</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --crimson:      #A21A38;
+            --crimson-l:    rgba(162, 26, 56, 0.08);
+            --crimson-d:    #7A1028;
+            --text-on-dark: #FFFFFF;
+            --text-soft:    #94A3B8;
+            --card-border:  rgba(255,255,255,0.08);
+            --bg-dark:      #060D1A;
+            --card-dark:    #0F172A;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #FFFFFF;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Subtle background decoration */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -40%; left: -20%;
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(162, 26, 56, 0.06) 0%, transparent 65%);
+            pointer-events: none;
+        }
+        body::after {
+            content: '';
+            position: fixed;
+            bottom: -30%; right: -15%;
+            width: 600px; height: 600px;
+            background: radial-gradient(circle, rgba(30, 58, 138, 0.03) 0%, transparent 65%);
+            pointer-events: none;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 480px;
+            padding: 20px;
+            z-index: 10;
+        }
+
+        /* THE DARK CARD */
+        .auth-card {
+            background: var(--card-dark);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 24px;
+            padding: 48px;
+            box-shadow:
+                0 32px 64px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(162, 26, 56, 0.08),
+                inset 0 1px 0 rgba(255,255,255,0.05);
+            animation: cardAppear 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            color: var(--text-on-dark);
+        }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(30px) scale(0.97); }
+            to   { opacity: 1; transform: translateY(0)  scale(1); }
+        }
+
+        /* Animated top border stripe */
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 3px;
+            background: linear-gradient(90deg, var(--crimson-d), var(--crimson), #E53E3E, var(--crimson), var(--crimson-d));
+            background-size: 200% 100%;
+            animation: gradientMove 4s linear infinite;
+        }
+
+        @keyframes gradientMove {
+            0%   { background-position: 100% 0%; }
+            100% { background-position: -100% 0%; }
+        }
+
+        /* Logo Area */
+        .auth-logo-wrap {
+            text-align: center;
+            margin-bottom: 36px;
+            animation: logoFade 1s ease-out 0.2s both;
+        }
+        @keyframes logoFade {
+            from { opacity: 0; transform: scale(0.85); }
+            to   { opacity: 1; transform: scale(1); }
+        }
+
+        .auth-form-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .auth-form-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #FFFFFF;
+            letter-spacing: 0.5px;
+        }
+        .auth-form-sub {
+            font-size: 13px;
+            color: var(--text-soft);
+            line-height: 1.5;
+        }
+
+        /* Form Fields (Inside the Dark Card) */
+        .auth-field { margin-bottom: 22px; }
+        .auth-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-soft);
+            margin-bottom: 8px;
+        }
+        .auth-input-wrap { position: relative; }
+        .auth-input {
+            width: 100%;
+            background: #EBF2FC;
+            border: 1.5px solid rgba(162, 26, 56, 0.0);
+            border-radius: 12px;
+            padding: 14px 16px 14px 48px;
+            color: #1E293B;
+            font-size: 15px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            transition: all 0.25s;
+            outline: none;
+        }
+        .auth-input::placeholder { color: #94A3B8; }
+        .auth-input:focus {
+            background: #F0F6FF;
+            border-color: var(--crimson);
+            box-shadow: 0 0 0 3px rgba(162, 26, 56, 0.15);
+        }
+        .auth-input-icon {
+            position: absolute;
+            left: 17px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #64748B;
+            font-size: 15px;
+            transition: color 0.25s;
+            pointer-events: none;
+        }
+        .auth-input:focus ~ .auth-input-icon {
+            color: var(--crimson);
+        }
+
+        /* Password toggle button */
+        .auth-pwd-toggle { color: #64748B !important; }
+        .auth-pwd-toggle:hover { color: var(--crimson) !important; }
+
+        /* Sign-In Button */
+        .auth-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--crimson);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 15px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            cursor: pointer;
+            transition: all 0.25s;
+            box-shadow: 0 8px 24px rgba(162, 26, 56, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            letter-spacing: 0.3px;
+        }
+        .auth-btn:hover {
+            background: var(--crimson-d);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(162, 26, 56, 0.5);
+        }
+        .auth-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Forgot password link */
+        .auth-forgot-link {
+            color: var(--text-soft) !important;
+            font-size: 13px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .auth-forgot-link:hover { color: var(--crimson) !important; }
+
+        /* Footer outside card */
+        .auth-footer-outer {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 12px;
+            color: rgba(0,0,0,0.4);
+        }
+        .auth-footer-outer a {
+            color: rgba(0,0,0,0.55);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .auth-footer-outer a:hover { color: var(--crimson); }
+
+        /* Error States (Inside Card) */
+        .auth-alert {
+            background: rgba(162, 26, 56, 0.15);
+            border: 1px solid rgba(162, 26, 56, 0.3);
+            padding: 13px 16px;
+            border-radius: 12px;
+            color: #fca5a5;
+            font-size: 13px;
+            margin-bottom: 22px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Divider */
+        .auth-divider {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 12px;
+            color: rgba(255,255,255,0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+        }
+        .auth-divider::before, .auth-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%; width: 40%;
+            height: 1px;
+            background: rgba(255,255,255,0.08);
+        }
+        .auth-divider::before { left: 0; }
+        .auth-divider::after  { right: 0; }
+
+        /* Auth footer (inside card) */
+        .auth-footer {
+            text-align: center;
+            font-size: 14px;
+        }
+        .auth-footer a {
+            color: var(--crimson);
+            font-weight: 700;
+            text-decoration: none;
+        }
+        .auth-footer a:hover { filter: brightness(1.2); }
+
+        /* Help/error text */
+        .auth-error {
+            font-size: 12px;
+            color: #f87171;
+            margin-top: 4px;
+        }
+        .auth-help {
+            font-size: 12px;
+            color: var(--text-soft);
+            margin-top: 4px;
+        }
+
+        /* Role info box */
+        .role-info-box {
+            background: rgba(162, 26, 56, 0.08);
+            border: 1px solid rgba(162, 26, 56, 0.2);
+            border-left: 3px solid var(--crimson);
+            border-radius: 0 8px 8px 0;
+            padding: 9px 13px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #fca5a5;
+            display: flex;
+            align-items: flex-start;
+            gap: 7px;
+        }
+
+        /* Animations */
+        .fade-in { animation: fadeIn 0.5s ease both; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* ── AUTH READABILITY OVERRIDES ── */
+        .auth-form-title {
+            font-size: 30px !important;
+        }
+        .auth-form-sub {
+            font-size: 15px !important;
+        }
+        .auth-label {
+            font-size: 13px !important;
+        }
+        .auth-input {
+            font-size: 16px !important;
+            padding: 13px 16px 13px 48px !important;
+        }
+        .auth-btn {
+            font-size: 16px !important;
+        }
+        .auth-forgot-link {
+            font-size: 14px !important;
+        }
+        .auth-footer-outer {
+            font-size: 14px !important;
+        }
+        .auth-alert {
+            font-size: 15px !important;
+        }
+        .auth-divider {
+            font-size: 13px !important;
+        }
+        .auth-footer {
+            font-size: 16px !important;
+        }
+        .auth-error, 
+        .auth-help {
+            font-size: 13px !important;
+        }
+        .role-info-box {
+            font-size: 13px !important;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-logo-wrap" style="text-align: center; margin-bottom: 32px; animation: logoFade 1s ease-out 0.2s both;">
+                <svg width="80" height="80" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0 8px 20px rgba(162, 26, 56, 0.4));">
+                    <path d="M32 4L4 16V20H60V16L32 4Z" fill="url(#crimsonGradient)"/>
+                    <path d="M12 24H18V48H12V24ZM29 24H35V48H29V24ZM46 24H52V48H46V24Z" fill="rgba(255,255,255,0.85)"/>
+                    <path d="M4 52H60V56H4V52ZM8 56H56V60H8V56Z" fill="rgba(255,255,255,0.5)"/>
+                    <defs>
+                        <linearGradient id="crimsonGradient" x1="4" y1="4" x2="60" y2="20" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#7A1028"/>
+                            <stop offset="0.5" stop-color="#A21A38"/>
+                            <stop offset="1" stop-color="#E53E3E"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            {% block auth_content %}{% endblock %}
+        </div>
+
+        <div class="auth-footer-outer fade-in" style="animation-delay: 0.6s;">
+            &copy; {% now "Y" %} Juridex &middot; Secure Case Management Solution
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

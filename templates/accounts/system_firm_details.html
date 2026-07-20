@@ -1,0 +1,343 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}Firm Details - CaseFlow{% endblock %}
+{% block page_title %}Firm Details List{% endblock %}
+
+{% block extra_css %}
+<style>
+    .firm-search-filter-panel {
+        background: var(--card);
+        border: 1.5px solid var(--border);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 24px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    #firmSearchInput:focus {
+        border-color: var(--crimson) !important;
+        box-shadow: 0 0 0 3px rgba(255, 107, 0, 0.15) !important;
+        outline: none;
+    }
+
+    .firm-filter-pill {
+        border: 1.5px solid var(--border) !important;
+        background: var(--card) !important;
+        color: var(--text-mid) !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer;
+    }
+
+    .firm-filter-pill:hover {
+        background: var(--bg) !important;
+        color: var(--text) !important;
+        border-color: var(--text-soft) !important;
+    }
+
+    .firm-filter-pill.active {
+        background: var(--crimson) !important;
+        color: #fff !important;
+        border-color: var(--crimson) !important;
+        box-shadow: 0 4px 12px rgba(255, 107, 0, 0.2);
+    }
+
+    .firm-row {
+        transition: background-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .firm-row:hover {
+        background-color: rgba(255, 107, 0, 0.02) !important;
+    }
+
+    mark.search-highlight {
+        background: rgba(255, 107, 0, 0.2) !important;
+        color: var(--crimson) !important;
+        font-weight: 800;
+        border-radius: 4px;
+        padding: 2px 4px;
+    }
+
+    .firm-status {
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 10px;
+        border-radius: 20px;
+    }
+
+    .status-active {
+        background: var(--emerald-l);
+        color: var(--emerald);
+    }
+
+    .status-inactive {
+        background: var(--amber-l);
+        color: var(--amber);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 30px;">
+    <div>
+        <h3>Firm <span>Details</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;">
+            View detailed information about all registered firms and their owners.
+        </div>
+    </div>
+</div>
+
+<!-- Beautiful Search & Filter Panel -->
+<div class="firm-search-filter-panel">
+    <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 300px;">
+        <div style="position: relative; width: 100%;">
+            <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-soft); font-size: 14px;"></i>
+            <input type="text" id="firmSearchInput" placeholder="Search firms by name, registration #, owner, email or phone..." 
+                   style="width: 100%; padding: 12px 16px 12px 42px; border-radius: 10px; border: 1.5px solid var(--border); background: var(--bg); color: var(--text); font-size: 14px; transition: all 0.25s ease;"
+                   oninput="filterFirms()">
+        </div>
+    </div>
+    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+        <span style="font-size: 12px; font-weight: 700; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.5px; margin-right: 8px;">Filter by:</span>
+        <button type="button" class="btn btn-sm firm-filter-pill active" onclick="setFirmFilter('all', this)">All Firms</button>
+        <button type="button" class="btn btn-sm firm-filter-pill" onclick="setFirmFilter('test', this)"><i class="fas fa-flask me-1"></i> Test Firms</button>
+        <button type="button" class="btn btn-sm firm-filter-pill" onclick="setFirmFilter('active', this)"><i class="fas fa-check-circle me-1"></i> Active</button>
+        <button type="button" class="btn btn-sm firm-filter-pill" onclick="setFirmFilter('inactive', this)"><i class="fas fa-ban me-1"></i> Inactive</button>
+    </div>
+</div>
+
+<div class="panel" style="margin-top: 30px;">
+    <div class="panel-head">
+        <div class="panel-title">
+            <i class="fas fa-list-alt" style="color: var(--sapphire)"></i> Firm & Owner Details
+        </div>
+    </div>
+    <div style="overflow-x:auto">
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr style="background: var(--card2); border-bottom: 1px solid var(--border);">
+                    <th style="padding: 12px 24px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">Firm Name</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">Registration No.</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">Owner Name</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">Owner Contact</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">Firm Contact</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">Firm Users</th>
+                    <th style="padding: 12px 16px; text-align: center; font-size: 11px; text-transform: uppercase; color: var(--text-soft);">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in firm_details %}
+                <tr class="firm-row" style="border-bottom: 1px solid var(--border);">
+                    <td style="padding: 14px 24px;">
+                        <div class="firm-row-name" data-original-name="{{ item.firm.name }}" style="font-weight: 700; color: var(--text);">{{ item.firm.name }}</div>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        <span class="firm-row-reg" style="font-size: 13px; color: var(--text-mid);">{{ item.firm.registration_number|default:"N/A" }}</span>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        {% if item.owner %}
+                        <div style="font-weight: 600; color: var(--text);">{{ item.owner.get_full_name|default:item.owner.username }}</div>
+                        <div style="font-size: 11px; color: var(--text-soft);">@{{ item.owner.username }}</div>
+                        {% else %}
+                        <span style="color: var(--text-soft); font-size: 12px;">No owner assigned</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        {% if item.owner %}
+                        <div style="font-size: 12px; color: var(--text-mid);">{{ item.owner.email|default:"No email" }}</div>
+                        <div style="font-size: 12px; color: var(--text-soft);">{{ item.owner.phone_number|default:"No phone" }}</div>
+                        {% else %}
+                        <span style="color: var(--text-soft); font-size: 12px;">N/A</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        <div style="font-size: 12px; color: var(--text-mid);">{{ item.firm.email|default:"No email" }}</div>
+                        <div style="font-size: 12px; color: var(--text-soft);">{{ item.firm.phone|default:"No phone" }}</div>
+                    </td>
+                    <td style="padding: 14px 16px;">
+                        <button class="btn btn-sm btn-secondary" onclick="viewFirmUsers('{{ item.firm.pk }}')" style="font-size: 11px; padding: 6px 12px;">
+                            <i class="fas fa-users"></i> View Users ({{ item.firm.users.count }})
+                        </button>
+                        <div id="firm-users-data-{{ item.firm.pk }}" style="display: none;">
+                            {% for user in item.firm.users.all %}
+                                <div style="font-size: 13px; background: var(--bg); padding: 12px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <div style="font-weight: 700; color: var(--text);">{{ user.get_full_name|default:user.username }}</div>
+                                        <div style="font-size: 11px; color: var(--text-soft); margin-top: 2px;">@{{ user.username }} | {{ user.email|default:"No email" }}</div>
+                                    </div>
+                                    <span style="font-size: 11px; padding: 4px 8px; border-radius: 4px; background: var(--card); border: 1px solid var(--border);">{{ user.get_role_display }}</span>
+                                </div>
+                            {% empty %}
+                                <div style="text-align: center; padding: 30px; color: var(--text-soft);">
+                                    <i class="fas fa-user-slash" style="font-size: 24px; margin-bottom: 10px; opacity: 0.5;"></i>
+                                    <div>No users registered for this firm.</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </td>
+                    <td style="padding: 14px 16px; text-align: center;">
+                        {% if item.firm.is_active %}
+                        <span style="display: inline-block; width: 8px; height: 8px; background: var(--emerald); border-radius: 50%; margin-right: 4px;"></span>
+                        <span class="firm-row-status firm-status status-active">Active</span>
+                        {% else %}
+                        <span style="display: inline-block; width: 8px; height: 8px; background: var(--amber); border-radius: 50%; margin-right: 4px;"></span>
+                        <span class="firm-row-status firm-status status-inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="padding: 40px; text-align: center; color: var(--text-soft);">No firms registered yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <!-- Empty state for table -->
+    <div id="firmTableEmptyState" style="display: none; text-align: center; padding: 48px 24px; background: var(--card); border-top: 1px solid var(--border);">
+        <div style="font-size: 40px; color: var(--crimson); margin-bottom: 12px;"><i class="fas fa-search-minus"></i></div>
+        <div style="font-size: 16px; font-weight: 700; color: var(--text);">No matching firms found</div>
+        <div style="font-size: 12px; color: var(--text-soft); margin-top: 4px;">Try adjusting your search query or selection filters.</div>
+    </div>
+</div>
+
+<!-- Users Modal -->
+<div class="modal-overlay" id="usersModal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="modal-panel" style="background: var(--card); border-radius: 16px; width: 100%; max-width: 500px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 24px 64px rgba(0, 0, 0, 0.15); overflow: hidden;">
+        <div class="modal-head" style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <div class="modal-title" style="font-size: 16px; font-weight: 700; color: var(--text);">
+                <i class="fas fa-users" style="color: var(--sapphire)"></i> Firm Users
+            </div>
+            <button onclick="closeUsersModal()" style="background: none; border: none; cursor: pointer; color: var(--text-soft); font-size: 18px;">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="usersModalBody" style="padding: 24px; overflow-y: auto; flex: 1; background: var(--bg);">
+            <!-- User content gets injected here -->
+        </div>
+        <div class="modal-foot" style="padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; background: var(--card);">
+            <button type="button" class="btn btn-secondary" onclick="closeUsersModal()">Close</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let currentFilter = 'all';
+
+    window.setFirmFilter = function(filterType, element) {
+        document.querySelectorAll('.firm-filter-pill').forEach(pill => {
+            pill.classList.remove('active');
+        });
+        element.classList.add('active');
+        
+        currentFilter = filterType;
+        filterFirms();
+    };
+
+    window.filterFirms = function() {
+        const searchInput = document.getElementById('firmSearchInput');
+        if (!searchInput) return;
+        
+        const query = searchInput.value.toLowerCase().trim();
+        const rows = document.querySelectorAll('.firm-row');
+        
+        let visibleRowsCount = 0;
+        
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        function highlightText(element, originalText, matchTerm) {
+            if (!matchTerm) {
+                element.textContent = originalText;
+                return;
+            }
+            
+            const index = originalText.toLowerCase().indexOf(matchTerm);
+            if (index >= 0) {
+                const start = originalText.substring(0, index);
+                const middle = originalText.substring(index, index + matchTerm.length);
+                const end = originalText.substring(index + matchTerm.length);
+                element.innerHTML = `${escapeHTML(start)}<mark class="search-highlight">${escapeHTML(middle)}</mark>${escapeHTML(end)}`;
+            } else {
+                element.textContent = originalText;
+            }
+        }
+        
+        rows.forEach(row => {
+            const nameEl = row.querySelector('.firm-row-name');
+            const originalName = nameEl ? nameEl.getAttribute('data-original-name') : '';
+            const regNoEl = row.querySelector('.firm-row-reg');
+            const regNo = regNoEl ? regNoEl.textContent.toLowerCase() : '';
+            const statusEl = row.querySelector('.firm-row-status');
+            const isActive = statusEl ? statusEl.textContent.trim().toLowerCase() === 'active' : true;
+            
+            let matchesFilter = true;
+            if (currentFilter === 'test') {
+                matchesFilter = originalName.toLowerCase().includes('test');
+            } else if (currentFilter === 'active') {
+                matchesFilter = isActive;
+            } else if (currentFilter === 'inactive') {
+                matchesFilter = !isActive;
+            }
+            
+            let matchesSearch = true;
+            const rowText = row.textContent.toLowerCase();
+            if (query) {
+                matchesSearch = originalName.toLowerCase().includes(query) || regNo.includes(query) || rowText.includes(query);
+            }
+            
+            if (matchesFilter && matchesSearch) {
+                row.style.display = '';
+                visibleRowsCount++;
+                
+                if (nameEl) {
+                    if (currentFilter === 'test' && !query) {
+                        highlightText(nameEl, originalName, 'test');
+                    } else {
+                        highlightText(nameEl, originalName, query);
+                    }
+                }
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        const tableEmpty = document.getElementById('firmTableEmptyState');
+        const tableContainer = document.querySelector('.firm-row') ? document.querySelector('.firm-row').closest('table') : null;
+        if (visibleRowsCount === 0) {
+            if (tableContainer) tableContainer.style.display = 'none';
+            if (tableEmpty) tableEmpty.style.display = 'block';
+        } else {
+            if (tableContainer) tableContainer.style.display = 'table';
+            if (tableEmpty) tableEmpty.style.display = 'none';
+        }
+    };
+
+    window.viewFirmUsers = function(firmPk) {
+        const dataDiv = document.getElementById('firm-users-data-' + firmPk);
+        const modalBody = document.getElementById('usersModalBody');
+        if (dataDiv && modalBody) {
+            modalBody.innerHTML = dataDiv.innerHTML;
+            document.getElementById('usersModal').style.display = 'flex';
+        }
+    };
+
+    window.closeUsersModal = function() {
+        document.getElementById('usersModal').style.display = 'none';
+    };
+
+    // Close on click outside
+    document.getElementById('usersModal').addEventListener('click', function(e) {
+        if (e.target === this) closeUsersModal();
+    });
+</script>
+{% endblock %}

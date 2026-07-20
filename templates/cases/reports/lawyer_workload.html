@@ -1,0 +1,48 @@
+{% extends "cases/reports/base_report.html" %}
+
+{% block report_title %}
+<i class="fas fa-users-cog" style="color: var(--crimson); margin-right: 8px;"></i> Lawyer Workload Report
+{% endblock %}
+
+{% block export_buttons %}
+<a href="{% url 'export_report' 'lawyer_workload' 'excel' %}" class="btn-export btn-export-excel">
+    <i class="fas fa-file-excel"></i> Export Excel
+</a>
+<a href="{% url 'export_report' 'lawyer_workload' 'pdf' %}" class="btn-export btn-export-pdf">
+    <i class="fas fa-file-pdf"></i> Export PDF
+</a>
+{% endblock %}
+
+{% block report_body %}
+<p style="font-size: 14px; color: var(--text-soft); margin-bottom: 20px;">Shows how many active and closed cases each user is handling.</p>
+
+<table class="report-table">
+    <thead>
+        <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th style="text-align: center;">Active Cases</th>
+            <th style="text-align: center;">Closed Cases</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for stat in user_case_stats %}
+        <tr>
+            <td style="font-weight: 600;">{{ stat.user.get_full_name|default:stat.user.username }}</td>
+            <td>
+                <span style="font-size: 11px; background: var(--bg); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">
+                    {{ stat.role }}
+                </span>
+            </td>
+            <td style="text-align: center; font-weight: 700; color: var(--sapphire);">{{ stat.active_cases }}</td>
+            <td style="text-align: center; font-weight: 600; color: var(--text-mid);">{{ stat.closed_cases }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="4" style="text-align: center; padding: 40px; color: var(--text-soft);">No user stats available.</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

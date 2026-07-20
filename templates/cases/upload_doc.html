@@ -1,0 +1,67 @@
+{% extends "base/dashboard_base.html" %}
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                    <h6 class="m-0 font-weight-bold text-primary">Upload Case Document</h6>
+                    <a href="{% url 'case_detail' case.id %}" class="btn btn-sm btn-secondary">Back to Case</a>
+                </div>
+
+                <div class="card-body">
+                    <p class="text-muted mb-4">
+                        Adding document to Case: <strong>{{ case.case_number }}</strong>
+                    </p>
+
+                    <form method="POST" enctype="multipart/form-data">
+                        {% csrf_token %}
+
+                        <div class="form-group mb-3">
+                            <label for="title" class="form-label font-weight-bold">Document Title</label>
+                            <input type="text" name="title" class="form-control"
+                                placeholder="e.g. Final Bail Application" required>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="category" class="form-label font-weight-bold">Category</label>
+                                <select name="category" class="form-control" required>
+                                    <option value="PET">Petition</option>
+                                    <option value="EVI">Evidence</option>
+                                    <option value="ORD">Court Order</option>
+                                    <option value="CLI">Client Document</option>
+                                    <option value="OTH">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label for="file" class="form-label font-weight-bold">Select File (PDF
+                                    preferred)</label>
+                                <input type="file" name="file" class="form-control-file border p-1 w-100" required>
+                            </div>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label for="notes" class="form-label font-weight-bold">Initial Notes (Optional)</label>
+                            <textarea name="notes" class="form-control" rows="3"
+                                placeholder="Briefly describe this document..."></textarea>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-block">
+                                <i class="fas fa-upload mr-2"></i> Confirm & Upload to Vault
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="alert alert-light border small text-muted">
+                <i class="fas fa-info-circle mr-1"></i>
+                All uploads are logged with your user ID and timestamp for audit purposes.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

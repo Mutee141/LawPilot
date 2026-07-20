@@ -1,0 +1,91 @@
+{% extends "cases/reports/base_report.html" %}
+
+{% block report_title %}
+<i class="fas fa-gavel" style="color: var(--text); margin-right: 8px;"></i> Hearing Report
+{% endblock %}
+
+{% block export_buttons %}
+<a href="{% url 'export_report' 'hearings' 'excel' %}" class="btn-export btn-export-excel">
+    <i class="fas fa-file-excel"></i> Export Excel
+</a>
+<a href="{% url 'export_report' 'hearings' 'pdf' %}" class="btn-export btn-export-pdf">
+    <i class="fas fa-file-pdf"></i> Export PDF
+</a>
+{% endblock %}
+
+{% block report_body %}
+<p style="font-size: 14px; color: var(--text-soft); margin-bottom: 20px;">Overview of Upcoming, Missed, and Completed Hearings.</p>
+
+<div style="margin-bottom: 30px;">
+    <h4 style="color: var(--sapphire); margin-bottom: 10px;"><i class="fas fa-clock" style="margin-right: 5px;"></i> Upcoming Hearings</h4>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Case Name / Number</th>
+                <th>Assigned Senior Lawyer</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for hearing in upcoming_hearings %}
+            <tr>
+                <td style="font-weight: 600;">{{ hearing.hearing_date|date:"d-M-Y" }}</td>
+                <td>{{ hearing.case.title|default:"Untitled" }} <span style="font-size: 12px; color: var(--text-soft);">({{ hearing.case.case_number|default:"-" }})</span></td>
+                <td>{{ hearing.case.assigned_senior_lawyer.get_full_name|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" style="text-align: center; padding: 20px; color: var(--text-soft);">No upcoming hearings.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-bottom: 30px;">
+    <h4 style="color: var(--crimson); margin-bottom: 10px;"><i class="fas fa-exclamation-circle" style="margin-right: 5px;"></i> Missed / Pending Hearings</h4>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Case Name / Number</th>
+                <th>Assigned Senior Lawyer</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for hearing in missed_hearings %}
+            <tr>
+                <td style="font-weight: 600; color: var(--crimson);">{{ hearing.hearing_date|date:"d-M-Y" }}</td>
+                <td>{{ hearing.case.title|default:"Untitled" }} <span style="font-size: 12px; color: var(--text-soft);">({{ hearing.case.case_number|default:"-" }})</span></td>
+                <td>{{ hearing.case.assigned_senior_lawyer.get_full_name|default:"-" }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" style="text-align: center; padding: 20px; color: var(--text-soft);">No missed hearings.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <h4 style="color: var(--emerald); margin-bottom: 10px;"><i class="fas fa-check-circle" style="margin-right: 5px;"></i> Completed Hearings</h4>
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Case Name / Number</th>
+                <th>Outcome</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for hearing in completed_hearings %}
+            <tr>
+                <td style="font-weight: 600;">{{ hearing.hearing_date|date:"d-M-Y" }}</td>
+                <td>{{ hearing.case.title|default:"Untitled" }} <span style="font-size: 12px; color: var(--text-soft);">({{ hearing.case.case_number|default:"-" }})</span></td>
+                <td><span style="font-size: 12px; background: var(--bg); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">{{ hearing.hearing_outcome|default:"Completed" }}</span></td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" style="text-align: center; padding: 20px; color: var(--text-soft);">No completed hearings.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends "base/base.html" %}
+
+{% block title %}Cases History - Law Firm Management{% endblock %}
+{% block page_title %}Cases History{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="mb-1">Cases History</h3>
+        <p class="text-muted mb-0" style="font-size: 14px;">View historical case records imported into the system.</p>
+    </div>
+    {% if request.user.role == 'firm_owner' %}
+    <a href="{% url 'case_history_upload' %}" class="btn btn-primary">
+        <i class="fas fa-upload"></i> Bulk Upload CSV / Excel
+    </a>
+    {% endif %}
+</div>
+
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- Filters Section -->
+<div class="card mb-4" style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+    <div class="card-body p-3">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label text-muted small fw-bold mb-1">Title</label>
+                <input type="text" id="filter-title" class="form-control form-control-sm" placeholder="Search title...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small fw-bold mb-1">Case ID</label>
+                <input type="text" id="filter-case-id" class="form-control form-control-sm" placeholder="Search ID...">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small fw-bold mb-1">Court</label>
+                <select id="filter-court" class="form-select form-select-sm">
+                    <option value="">All Courts</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label text-muted small fw-bold mb-1">Global Search</label>
+                <input type="text" id="filter-global" class="form-control form-control-sm" placeholder="Search everywhere...">
+            </div>
+        </div>
+    </div>
+</div>
+<div class="card" style="border: 1px solid var(--border); border-radius: 12px; overflow: hidden;">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" style="font-size: 14px;" id="case-history-table">
+                <thead style="background-color: #f8f9fa;">
+                    <tr>
+                        <th class="ps-4">Title</th>
+                        <th>Case ID</th>
+                        <th>Court</th>
+                        <th>Outcome</th>
+                        <th>Import Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for history in histories %}
+                    <tr class="history-row">
+                        <td class="ps-4 fw-medium text-dark">{{ history.title }}</td>
+                        <td><span class="badge bg-secondary">{{ history.case_id }}</span></td>
+                        <td>{{ history.court }}</td>
+                        <td>{{ history.court_outcome|truncatechars:50 }}</td>
+                        <td class="text-muted">{{ history.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="fas fa-file-archive text-muted mb-3" style="font-size: 48px;"></i>
+                            <h5 class="text-muted">No case history found</h5>
+                            <p class="text-muted" style="font-size: 14px;">Import historical records using the bulk
+                                upload tool.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const table = document.getElementById('case-history-table');
+    if (!table) return;
+    
+    const rows = Array.from(table.querySelectorAll('tbody tr.history-row'));
+    
+    const titleInput = document.getElementById('filter-title');
+    const caseIdInput = document.getElementById('filter-case-id');
+    const courtSelect = document.getElementById('filter-court');
+    const globalInput = document.getElementById('filter-global');
+    
+    // 1. Populate Dropdowns dynamically from table data
+    const courts = new Set();
+    
+    // Store original text for highlighting purposes
+    rows.forEach(row => {
+        const titleCell = row.cells[0];
+        const caseIdCell = row.cells[1];
+        const courtCell = row.cells[2];
+        const outcomeCell = row.cells[3];
+        
+        row.dataset.originalTitle = titleCell.textContent.trim();
+        row.dataset.originalCaseId = caseIdCell.textContent.trim();
+        row.dataset.originalCourt = courtCell.textContent.trim();
+        row.dataset.originalOutcome = outcomeCell.textContent.trim();
+        
+        if(row.dataset.originalCourt) courts.add(row.dataset.originalCourt);
+    });
+    
+    Array.from(courts).sort().forEach(c => courtSelect.add(new Option(c, c)));
+    
+    // 2. Highlighting Function
+    function highlight(text, query) {
+        if (!query) return text;
+        const escapeHtml = (unsafe) => unsafe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        
+        const escapedText = escapeHtml(text);
+        const escapedQuery = escapeHtml(query);
+        
+        const regex = new RegExp(`(${escapedQuery.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return escapedText.replace(regex, '<mark class="bg-warning text-dark p-0">$1</mark>');
+    }
+    
+    // 3. Filter Logic
+    function applyFilters() {
+        const tVal = titleInput.value.toLowerCase();
+        const idVal = caseIdInput.value.toLowerCase();
+        const cVal = courtSelect.value;
+        const gVal = globalInput.value.toLowerCase();
+        
+        rows.forEach(row => {
+            const title = row.dataset.originalTitle;
+            const caseId = row.dataset.originalCaseId;
+            const court = row.dataset.originalCourt;
+            const outcome = row.dataset.originalOutcome;
+            
+            // Check individual filters
+            const matchesTitle = title.toLowerCase().includes(tVal);
+            const matchesId = caseId.toLowerCase().includes(idVal);
+            const matchesCourt = cVal === "" || court === cVal;
+            
+            // Check global filter
+            const combinedText = `${title} ${caseId} ${court} ${outcome}`.toLowerCase();
+            const matchesGlobal = combinedText.includes(gVal);
+            
+            if (matchesTitle && matchesId && matchesCourt && matchesGlobal) {
+                row.style.display = '';
+                
+                // Highlight text if global search is active
+                if (gVal) {
+                    row.cells[0].innerHTML = highlight(title, gVal);
+                    row.cells[1].innerHTML = `<span class="badge bg-secondary">${highlight(caseId, gVal)}</span>`;
+                    row.cells[2].innerHTML = highlight(court, gVal);
+                    row.cells[3].innerHTML = highlight(outcome, gVal);
+                } else {
+                    // Reset to original if no global search
+                    row.cells[0].textContent = title;
+                    row.cells[1].innerHTML = `<span class="badge bg-secondary">${caseId}</span>`;
+                    row.cells[2].textContent = court;
+                    row.cells[3].textContent = outcome;
+                }
+                
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+    
+    // 4. Attach Event Listeners
+    titleInput.addEventListener('input', applyFilters);
+    caseIdInput.addEventListener('input', applyFilters);
+    courtSelect.addEventListener('change', applyFilters);
+    globalInput.addEventListener('input', applyFilters);
+});
+</script>
+{% endblock %}

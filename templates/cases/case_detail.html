@@ -1,0 +1,830 @@
+{% extends "base/dashboard_base.html" %}
+{% block title %}{{ case.case_number }} - Law Firm Management{% endblock %}
+{% block page_title %}Case Details{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+    }
+
+    .info-cell {
+        padding: 16px 22px;
+        border-bottom: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+    }
+
+    .info-cell:nth-child(even) {
+        border-right: none;
+    }
+
+    .info-cell:nth-last-child(-n+2) {
+        border-bottom: none;
+    }
+
+    .info-cell.full {
+        grid-column: 1/-1;
+        border-right: none;
+    }
+
+    .detail-label {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text-soft);
+        margin-bottom: 5px;
+    }
+
+    .detail-value {
+        font-size: 14px;
+        color: var(--text);
+        font-weight: 500;
+        line-height: 1.6;
+    }
+
+    .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 13px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .status-pill::before {
+        content: '';
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+
+    .status-pill.pending::before {
+        background: var(--amber);
+    }
+
+    .status-pill.pending {
+        background: var(--amber-l);
+        color: #78350f;
+    }
+
+    .status-pill.filed::before {
+        background: var(--sapphire);
+    }
+
+    .status-pill.filed {
+        background: var(--sapphire-l);
+        color: #1e3a8a;
+    }
+
+    .status-pill.decided::before {
+        background: var(--emerald);
+    }
+
+    .status-pill.decided {
+        background: var(--emerald-l);
+        color: #065f46;
+    }
+
+    .status-pill.closed::before {
+        background: #94a3b8;
+    }
+
+    .status-pill.closed {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    .priority-tag {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        font-weight: 700;
+    }
+
+    .pdot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+    }
+
+    .section-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .section-table th {
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--text-soft);
+        padding: 10px 18px;
+        text-align: left;
+        background: var(--card2);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .section-table td {
+        padding: 12px 18px;
+        font-size: 13px;
+        color: var(--text);
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+
+    .section-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .section-table tr:hover td {
+        background: #fafbff;
+    }
+
+    .stat-box {
+        background: var(--bg);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .stat-box-val {
+        font-family: 'Playfair Display', serif;
+        font-size: 30px;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1;
+    }
+
+    .stat-box-lbl {
+        font-size: 11px;
+        color: var(--text-soft);
+        margin-top: 4px;
+    }
+
+    /* ── Document Vault ── */
+    .doc-category-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        background: var(--sapphire-l);
+        color: var(--sapphire);
+    }
+
+    .doc-version-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--card2);
+        border: 1px solid var(--border);
+        color: var(--text-mid);
+        cursor: pointer;
+        position: relative;
+    }
+
+    .doc-version-btn:hover {
+        background: var(--border);
+    }
+
+    .doc-version-dropdown {
+        display: none;
+        position: absolute;
+        top: calc(100% + 4px);
+        left: 0;
+        z-index: 100;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .08);
+        min-width: 200px;
+        overflow: hidden;
+    }
+
+    .doc-version-btn:focus-within .doc-version-dropdown,
+    .doc-version-btn:hover .doc-version-dropdown {
+        display: block;
+    }
+
+    .doc-version-dropdown a {
+        display: block;
+        padding: 9px 14px;
+        font-size: 12px;
+        color: var(--text);
+        text-decoration: none;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .doc-version-dropdown a:last-child {
+        border-bottom: none;
+    }
+
+    .doc-version-dropdown a:hover {
+        background: var(--card2);
+    }
+
+    /* Upload Modal */
+    .vault-modal-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .45);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .vault-modal-overlay.active {
+        display: flex;
+    }
+
+    .vault-modal {
+        background: var(--card);
+        border-radius: 16px;
+        width: 100%;
+        max-width: 480px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, .15);
+        overflow: hidden;
+    }
+
+    .vault-modal-head {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .vault-modal-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .vault-modal-body {
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .vault-field label {
+        display: block;
+        font-size: 10px;
+        font-weight: 700;
+        letter-spacing: 1.2px;
+        text-transform: uppercase;
+        color: var(--text-soft);
+        margin-bottom: 6px;
+    }
+
+    .vault-field input,
+    .vault-field select {
+        width: 100%;
+        padding: 9px 12px;
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+        font-size: 13px;
+        color: var(--text);
+        background: var(--bg);
+        outline: none;
+        transition: border-color .15s;
+        box-sizing: border-box;
+    }
+
+    .vault-field input:focus,
+    .vault-field select:focus {
+        border-color: var(--sapphire);
+    }
+
+    .vault-dropzone {
+        border: 2px dashed var(--border);
+        border-radius: 10px;
+        padding: 28px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color .15s, background .15s;
+    }
+
+    .vault-dropzone:hover,
+    .vault-dropzone.dragover {
+        border-color: var(--sapphire);
+        background: var(--sapphire-l);
+    }
+
+    .vault-dropzone input[type="file"] {
+        display: none;
+    }
+
+    .vault-dropzone-icon {
+        font-size: 28px;
+        color: var(--sapphire);
+        opacity: .5;
+        margin-bottom: 8px;
+    }
+
+    .vault-dropzone-text {
+        font-size: 13px;
+        color: var(--text-soft);
+        line-height: 1.5;
+    }
+
+    .vault-dropzone-file-name {
+        margin-top: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--sapphire);
+    }
+
+    .vault-modal-foot {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+    <div>
+        <h3>Case <span>{{ case.case_number }}</span></h3>
+        <div style="font-size:13px;color:var(--text-soft);margin-top:5px;display:flex;align-items:center;gap:6px">
+            <i class="fas fa-briefcase" style="color:var(--sapphire)"></i>
+            {{ case.get_case_type_display }} · {{ case.court.name|default:"No Court" }}
+        </div>
+    </div>
+    <div style="display:flex;gap:10px">
+        {% if request.user.role == 'firm_owner' %}
+        <a href="{% url 'case_update' case.id %}" class="btn btn-warning btn-sm"><i class="fas fa-edit me-1"></i> Edit</a>
+        {% endif %}
+        <a href="{% url 'case_list' %}" class="btn btn-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i> Back</a>
+    </div>
+</div>
+
+<div class="grid-2-1" style="margin-bottom:20px">
+
+    <!-- LEFT: Case Info -->
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-info-circle" style="color:var(--sapphire)"></i> Case
+                    Information</div>
+            </div>
+            <div class="info-grid">
+                <div class="info-cell">
+                    <div class="detail-label">Case Number</div>
+                    <div class="detail-value" style="font-weight:700;color:var(--accent2)">{{ case.case_number }}</div>
+                </div>
+                <div class="info-cell">
+                    <div class="detail-label">Case Type</div>
+                    <div class="detail-value">
+                        <span
+                            style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:4px 10px;border-radius:20px">
+                            {{ case.get_case_type_display }}
+                        </span>
+                    </div>
+                </div>
+                <div class="info-cell">
+                    <div class="detail-label">Status</div>
+                    <div class="detail-value"><span class="status-pill {{ case.status }}">{{ case.status|capfirst }}</span></div>
+                </div>
+                <div class="info-cell">
+                    <div class="detail-label">Priority</div>
+                    <div class="detail-value">
+                        {% if case.priority == 'high' %}
+                        <div class="priority-tag">
+                            <div class="pdot" style="background:#ef4444"></div><span style="color:#dc2626">High
+                                Priority</span>
+                        </div>
+                        {% elif case.priority == 'normal' %}
+                        <div class="priority-tag">
+                            <div class="pdot" style="background:var(--sapphire)"></div><span
+                                style="color:var(--sapphire)">Normal</span>
+                        </div>
+                        {% else %}
+                        <div class="priority-tag">
+                            <div class="pdot" style="background:#22c55e"></div><span style="color:#16a34a">Low</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-cell">
+                    <div class="detail-label">Filed Date</div>
+                    <div class="detail-value">{{ case.filing_date|date:"M d, Y"|default:"—" }}</div>
+                </div>
+                <div class="info-cell">
+                    <div class="detail-label">Assigned Senior Lawyer</div>
+                    <div class="detail-value">
+                        {% if case.assigned_senior_lawyer %}
+                            <strong>{{ case.assigned_senior_lawyer.get_full_name|default:case.assigned_senior_lawyer.username }}</strong>
+                        {% else %}
+                            <span style="color:var(--text-soft)">Not Assigned</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-cell">
+                    <div class="detail-label">Court</div>
+                    <div class="detail-value">{{ case.court.name|default:"—" }}</div>
+                </div>
+                <div class="info-cell full">
+                    <div class="detail-label">Case Description</div>
+                    <div class="detail-value" style="font-size:13px;line-height:1.7">
+                        {{ case.description|linebreaks|default:"No description provided" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hearings -->
+        {% if request.user.role == 'senior_lawyer' %}
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-calendar" style="color:var(--sapphire)"></i> Hearings</div>
+                {% if request.user.role == 'senior_lawyer' %}
+                <a href="{% url 'hearing_create' %}?case={{ case.id }}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus me-1"></i> Add Hearing
+                </a>
+                {% endif %}
+            </div>
+            {% if case.hearings.all %}
+            <table class="section-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Outcome</th>
+                        <th>Next Hearing</th>
+                        <th style="text-align:center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for hearing in case.hearings.all %}
+                    <tr>
+                        <td>
+                            <div style="font-size:13px;font-weight:700">{{ hearing.hearing_date|date:"M d, Y" }}</div>
+                            <div style="font-size:11px;color:var(--text-soft)">{{ hearing.hearing_date|time:"H:i" }}
+                            </div>
+                        </td>
+                        <td style="max-width:180px;font-size:12px;color:var(--text-mid)">{{ hearing.hearing_outcome|truncatewords:6|default:"—" }}</td>
+                        <td>{% if hearing.next_hearing_date %}<span
+                                style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px">{{ hearing.next_hearing_date|date:"M d, Y" }}</span>{% else %}<span
+                                style="color:var(--text-soft);font-size:12px">—</span>{% endif %}</td>
+                        <td style="text-align:center">
+                            <a href="{% url 'hearing_detail' hearing.id %}" class="btn btn-sm btn-secondary"><i
+                                    class="fas fa-eye"></i></a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="padding:28px;text-align:center;color:var(--text-soft)">
+                <i class="fas fa-calendar" style="font-size:24px;opacity:.2;display:block;margin-bottom:8px"></i>
+                <small>No hearings scheduled yet</small>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Orders -->
+        {% if request.user.role == 'senior_lawyer' %}
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-file-contract" style="color:var(--emerald)"></i> Case Orders &
+                    Judgments</div>
+                {% if request.user.role == 'senior_lawyer' %}
+                <a href="{% url 'order_create' %}" class="btn btn-primary btn-sm"><i class="fas fa-plus me-1"></i>
+                    Upload Order</a>
+                {% endif %}
+            </div>
+            {% if case.orders.all %}
+            <table class="section-table">
+                <thead>
+                    <tr>
+                        <th>Order Type</th>
+                        <th>Date</th>
+                        <th>Summary</th>
+                        <th style="text-align:center">Document</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in case.orders.all %}
+                    <tr>
+                        <td><span
+                                style="background:var(--sapphire-l);color:var(--sapphire);font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px">{{ order.get_order_type_display }}</span></td>
+                        <td style="font-size:12px;color:var(--text-mid)">{{ order.order_date|date:"M d, Y" }}</td>
+                        <td style="font-size:12px;color:var(--text-mid);max-width:160px">{{ order.summary|truncatewords:6 }}</td>
+                        <td style="text-align:center">
+                            {% if order.order_document %}
+                            <a href="{{ order.order_document.url }}" target="_blank" class="btn btn-sm btn-secondary"><i
+                                    class="fas fa-download"></i></a>
+                            {% else %}<span style="font-size:12px;color:var(--text-soft)">—</span>{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div style="padding:28px;text-align:center;color:var(--text-soft)">
+                <i class="fas fa-file-contract" style="font-size:24px;opacity:.2;display:block;margin-bottom:8px"></i>
+                <small>No orders uploaded yet</small>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+
+
+    </div>
+
+    <!-- RIGHT: Sidebar -->
+    <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- Client -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-user" style="color:var(--accent2)"></i> Client</div>
+            </div>
+            <div style="padding:18px 22px">
+                {% if case.client %}
+                <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px">{{ case.client.full_name }}</div>
+                <div style="font-size:12px;color:var(--text-soft);margin-bottom:4px"><i class="fas fa-phone"
+                        style="font-size:10px;margin-right:3px"></i>{{ case.client.phone }}</div>
+                <div style="margin-top:14px">
+                    <a href="{% url 'client_detail' case.client.id %}" class="btn btn-secondary btn-sm w-100">
+                        <i class="fas fa-eye me-1"></i> View Client Profile
+                    </a>
+                </div>
+                {% else %}
+                <div style="color:var(--text-soft);font-size:13px">No client assigned</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Assigned Lawyers -->
+        {% if case.assigned_lawyers.all %}
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-people-group" style="color:var(--violet)"></i> Assigned
+                    Lawyers</div>
+            </div>
+            <div style="padding:8px 0">
+                {% for lawyer in case.assigned_lawyers.all %}
+                <div
+                    style="display:flex;align-items:center;gap:10px;padding:10px 20px;border-bottom:1px solid var(--border)">
+                    <div
+                        style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;flex-shrink:0">
+                        {{ lawyer.get_full_name|first|default:lawyer.username|first|upper }}
+                    </div>
+                    <div>
+                        <div style="font-size:13px;font-weight:600;color:var(--text)">{{ lawyer.get_full_name|default:lawyer.username }}</div>
+                        <div style="font-size:11px;color:var(--text-soft)">{{ lawyer.get_role_display }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Stats -->
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title"><i class="fas fa-chart-pie" style="color:var(--amber)"></i> Case Statistics
+                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:16px">
+                <div class="stat-box">
+                    <div class="stat-box-val" style="color:var(--sapphire)">{{ case.hearings.count }}</div>
+                    <div class="stat-box-lbl">Total Hearings</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-box-val" style="color:var(--emerald)">{{ case.orders.count }}</div>
+                    <div class="stat-box-lbl">Case Orders</div>
+                </div>
+                <div class="stat-box" style="grid-column:1/-1">
+                    <div class="stat-box-val" style="color:var(--violet)">{{ case.documents.count }}</div>
+                    <div class="stat-box-lbl">Vault Documents</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+        <!-- ── Case File Vault ── -->
+        {% if request.user.role == 'senior_lawyer' %}
+        <div class="panel">
+            <div class="panel-head">
+                <div class="panel-title">
+                    <i class="fas fa-folder-open" style="color:var(--violet)"></i> Case File Vault
+                </div>
+                {% if request.user.role == 'senior_lawyer' %}
+                <button class="btn btn-primary btn-sm" id="openUploadModal">
+                    <i class="fas fa-upload me-1"></i> Upload Document
+                </button>
+                {% endif %}
+            </div>
+            {% if case.documents.all %}
+            <div style="overflow-x: auto;">
+                <table class="section-table">
+                    <thead>
+                        <tr>
+                            <th>Document Name</th>
+                            <th style="min-width: 80px;">Category</th>
+                            <th style="min-width: 60px;">Version</th>
+                            <th style="text-align:center; min-width: 100px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doc in case.documents.all %}
+                        <tr>
+                            <td>
+                                <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px">
+                                    <i class="fas fa-file-alt" style="color:var(--violet);font-size:13px"></i>
+                                    {{ doc.title }}
+                                </div>
+                                <div style="font-size:11px;color:var(--text-soft);margin-top:4px;">
+                                    {{ doc.versions.first.uploaded_at|date:"M d, Y"|default:"—" }}
+                                </div>
+                            </td>
+                            <td><span class="doc-category-badge">{{ doc.get_category_display }}</span></td>
+                            <td>
+                                {% if doc.versions.first %}
+                                <span style="font-size:12px;font-weight:700;color:var(--emerald)">
+                                    v{{ doc.versions.first.version_number }}
+                                </span>
+                                {% else %}
+                                <span style="color:var(--text-soft);font-size:12px">—</span>
+                                {% endif %}
+                            </td>
+                            <td style="text-align:center">
+                                <div style="display:flex;align-items:center;justify-content:center;gap:6px">
+                                    {% if doc.versions.first %}
+                                    <a href="{{ doc.versions.first.file.url }}" target="_blank"
+                                        class="btn btn-sm btn-secondary" title="View latest">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    {% endif %}
+                                    {% if doc.versions.all|length > 0 %}
+                                    <div class="doc-version-btn" tabindex="0">
+                                        <i class="fas fa-history"></i>
+                                        <div class="doc-version-dropdown">
+                                            {% for version in doc.versions.all %}
+                                            <a href="{{ version.file.url }}" target="_blank">
+                                                <span style="font-weight:700">v{{ version.version_number }}</span>
+                                                <span style="color:var(--text-soft);margin-left:6px">{{ version.uploaded_at|date:"M d, Y" }}</span>
+                                            </a>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                    {% if request.user.role == 'senior_lawyer' %}
+                                    <form method="post" action="{% url 'delete_document' doc.id %}" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this document?');">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete document">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="padding:36px;text-align:center;color:var(--text-soft)">
+                <i class="fas fa-folder-open" style="font-size:28px;opacity:.2;display:block;margin-bottom:10px"></i>
+                <div style="font-size:13px;font-weight:600;margin-bottom:4px">No documents uploaded yet</div>
+                {% if request.user.role == 'senior_lawyer' %}
+                <small>Click "Upload Document" to add files to this case vault</small>
+                {% else %}
+                <small>No files have been added to this vault.</small>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+        <!-- ── /Case File Vault ── -->
+
+</div>
+
+<!-- ── Upload Document Modal ── -->
+<div class="vault-modal-overlay" id="uploadModalOverlay">
+    <div class="vault-modal">
+        <div class="vault-modal-head">
+            <div class="vault-modal-title">
+                <i class="fas fa-upload" style="color:var(--sapphire)"></i>
+                Upload Document
+            </div>
+            <button id="closeUploadModal"
+                style="background:none;border:none;cursor:pointer;font-size:18px;color:var(--text-soft);line-height:1">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form method="post" action="{% url 'document_upload' case.id %}" enctype="multipart/form-data"
+            id="uploadDocForm">
+            {% csrf_token %}
+            <input type="hidden" name="case" value="{{ case.id }}">
+
+            <div class="vault-modal-body">
+
+                <div class="vault-field">
+                    <label>Document Title</label>
+                    <input type="text" name="title" placeholder="e.g. Witness Statement — John Doe" required>
+                </div>
+
+                <div class="vault-field">
+                    <label>Category</label>
+                    <select name="category" required>
+                        <option value="" disabled selected>Select a category…</option>
+                        <option value="petition">Petition</option>
+                        <option value="evidence">Evidence</option>
+                        <option value="affidavit">Affidavit</option>
+                        <option value="order">Court Order</option>
+                        <option value="correspondence">Correspondence</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <div class="vault-field">
+                    <label>File</label>
+                    <div class="vault-dropzone" id="dropzone" onclick="document.getElementById('docFileInput').click()">
+                        <input type="file" name="file" id="docFileInput" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                            required>
+                        <div class="vault-dropzone-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="vault-dropzone-text">
+                            Click to browse or drag & drop<br>
+                            <span style="font-size:11px">PDF, DOC, DOCX, JPG, PNG</span>
+                        </div>
+                        <div class="vault-dropzone-file-name" id="selectedFileName"></div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="vault-modal-foot">
+                <button type="button" id="cancelUploadModal" class="btn btn-secondary btn-sm">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-upload me-1"></i> Upload
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Modal open / close
+    const overlay = document.getElementById('uploadModalOverlay');
+    const openBtn = document.getElementById('openUploadModal');
+    const closeBtn = document.getElementById('closeUploadModal');
+    const cancelBtn = document.getElementById('cancelUploadModal');
+
+    openBtn.addEventListener('click', () => overlay.classList.add('active'));
+    closeBtn.addEventListener('click', () => overlay.classList.remove('active'));
+    cancelBtn.addEventListener('click', () => overlay.classList.remove('active'));
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('active'); });
+
+    // File input — show selected file name
+    const fileInput = document.getElementById('docFileInput');
+    const fileNameEl = document.getElementById('selectedFileName');
+    const dropzone = document.getElementById('dropzone');
+
+    fileInput.addEventListener('change', () => {
+        fileNameEl.textContent = fileInput.files[0] ? fileInput.files[0].name : '';
+    });
+
+    // Drag & drop visual feedback
+    dropzone.addEventListener('dragover', e => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', e => {
+        e.preventDefault();
+        dropzone.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            fileNameEl.textContent = e.dataTransfer.files[0].name;
+        }
+    });
+</script>
+{% endblock %}

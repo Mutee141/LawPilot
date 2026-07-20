@@ -1,0 +1,423 @@
+{% load static %}
+
+<!-- ── NEW ANIMATED SIDEBAR ── -->
+<aside class="sidebar">
+    <!-- Updated Logo with Text -->
+    <div class="s-logo" style="padding: 26px 24px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+        <div
+            style="font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 900; color: #fff; letter-spacing: 1px; line-height: 1.2;">
+            LAW FIRM <span style="color: var(--crimson);">PORTAL</span>
+        </div>
+    </div>
+
+    {% if request.user.firm %}
+    <div class="s-firm-tag">
+        <div class="s-firm-dot"></div>
+        <div class="s-firm-info">
+            <div class="s-firm-name">{{ request.user.firm.name }}</div>
+            <div class="s-firm-type">Law Firm · {{ request.user.role|title }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    <nav class="s-nav">
+        <div class="s-section">Overview</div>
+
+        <!-- Dashboard -->
+        <a class="s-item"
+            href="{% if request.user.role == 'client' %}{% url 'client_dashboard' %}{% elif request.user.role == 'senior_lawyer' %}{% url 'senior_dashboard' %}{% elif request.user.role == 'junior_lawyer' %}{% url 'junior_dashboard' %}{% elif request.user.role == 'firm_owner' %}{% url 'owner_dashboard' %}{% elif request.user.role == 'accountant' %}{% url 'accountant_dashboard' %}{% elif request.user.role == 'system_admin' %}{% url 'system_admin_dashboard' %}{% else %}{% url 'dashboard_redirect' %}{% endif %}">
+            <div class="s-icon"><i class="fas fa-chart-pie"></i></div>
+            Dashboard
+        </a>
+
+        <!-- Cases -->
+        {% if request.user.role == 'firm_owner' or request.user.role == 'senior_lawyer' or request.user.role == 'junior_lawyer' or request.user.role == 'assistant' %}
+        <a class="s-item" href="{% url 'case_list' %}">
+            <div class="s-icon"><i class="fas fa-briefcase"></i></div>
+            Cases
+        </a>
+        {% endif %}
+
+        <!-- Hearings (Hearing List) -->
+        {% if request.user.role == 'senior_lawyer' %}
+        <a class="s-item" href="{% url 'hearing_list' %}">
+            <div class="s-icon"><i class="fas fa-calendar-alt"></i></div>
+            Hearings
+        </a>
+        {% endif %}
+
+        <!-- Cases History -->
+        {% if request.user.role == 'firm_owner' or request.user.role == 'senior_lawyer' or request.user.role == 'junior_lawyer' %}
+        <a class="s-item" href="{% url 'case_history_list' %}">
+            <div class="s-icon"><i class="fas fa-history"></i></div>
+            Cases History
+        </a>
+        {% endif %}
+
+        
+
+        <!-- Reports -->
+        {% if request.user.role == 'firm_owner' or request.user.role == 'senior_lawyer' %}
+        <a class="s-item" href="{% url 'reports_dashboard' %}">
+            <div class="s-icon"><i class="fas fa-chart-line"></i></div>
+            Reports
+        </a>
+        {% endif %}
+
+        <!-- Clients -->
+        {% if request.user.role == 'firm_owner' or request.user.role == 'senior_lawyer' or request.user.role == 'junior_lawyer' %}
+        <a class="s-item" href="{% url 'client_list' %}">
+            <div class="s-icon"><i class="fas fa-users"></i></div>
+            Clients
+        </a>
+        {% endif %}
+
+        <div class="s-section">Legal</div>
+
+        <!-- Courts -->
+        {% if request.user.role == 'firm_owner' or request.user.role == 'senior_lawyer' %}
+        <a class="s-item" href="{% url 'court_list' %}">
+            <div class="s-icon"><i class="fas fa-building-columns"></i></div>
+            Courts
+        </a>
+        {% endif %}
+
+        <!-- Legal Research -->
+        {% if request.user.role == 'firm_owner' or request.user.role == 'senior_lawyer' or request.user.role == 'system_admin' %}
+        <div class="sidebar-heading px-3 pt-3 pb-1 text-uppercase font-weight-bold" style="font-size: 11px; opacity: 0.6; letter-spacing: 1px;">
+            Legal Research
+        </div>
+
+        <a class="s-item d-flex align-items-center justify-content-between" data-bs-toggle="collapse" href="#legalResearchMenu" role="button" aria-expanded="false" aria-controls="legalResearchMenu">
+            <div class="d-flex align-items-center">
+                <div class="s-icon me-2"><i class="fas fa-balance-scale"></i></div>
+                <span>Research Center</span>
+            </div>
+            <i class="fas fa-chevron-down custom-chevron" style="font-size: 10px; transition: transform 0.3s;"></i>
+        </a>
+
+        <div class="collapse" id="legalResearchMenu">
+            <div class="ps-4 bg-dark-subtle" style="background-color: rgba(0, 0, 0, 0.15);">
+                <a class="s-item py-2" href="{% url 'legal_library:judgments_list' %}" style="font-size: 13px;">
+                    <div class="s-icon small-icon"><i class="fas fa-gavel"></i></div>
+                    Judgments
+                </a>
+
+                <a class="s-item py-2" href="{% url 'legal_library:acts_list' %}" style="font-size: 13px;">
+                    <div class="s-icon small-icon"><i class="fas fa-book"></i></div>
+                    Acts
+                </a>
+
+                <a class="s-item py-2" href="{% url 'legal_library:sections_list' %}" style="font-size: 13px;">
+                    <div class="s-icon small-icon"><i class="fas fa-bookmark"></i></div>
+                    Sections
+                </a>
+
+                <a class="s-item py-2" href="{% url 'legal_library:case_laws_list' %}" style="font-size: 13px;">
+                    <div class="s-icon small-icon"><i class="fas fa-file-contract"></i></div>
+                    Case Laws
+                </a>
+
+                <a class="s-item py-2 text-info" href="{% url 'legal_library:ai_search' %}" style="font-size: 13px; font-weight: 600;">
+                    <div class="s-icon small-icon"><i class="fas fa-robot"></i></div>
+                    AI Search <span class="badge bg-info text-dark ms-1" style="font-size: 9px; padding: 2px 4px;">Beta</span>
+                </a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Court Orders 
+        {% if request.user.role == 'firm_owner' %}
+        <a class="s-item" href="{% url 'case_order_list_admin' %}">
+            <div class="s-icon"><i class="fas fa-file-contract"></i></div>
+            Court Orders
+        </a>
+        {% elif request.user.role == 'senior_lawyer' %}
+        <a class="s-item" href="{% url 'case_order_list_senior' %}">
+            <div class="s-icon"><i class="fas fa-file-contract"></i></div>
+            Court Orders
+        </a>
+        {% elif request.user.role == 'junior_lawyer' %}
+        <a class="s-item" href="{% url 'case_order_list_junior' %}">
+            <div class="s-icon"><i class="fas fa-file-contract"></i></div>
+            Court Orders
+        </a>
+        {% elif request.user.role == 'client' %}
+        <a class="s-item" href="{% url 'case_order_list_client' %}">
+            <div class="s-icon"><i class="fas fa-file-contract"></i></div>
+            Court Orders
+        </a>
+        {% endif %}-->
+
+        <!-- Administration -->
+        <div class="s-section">Administration</div>
+
+        {% if request.user.role == 'system_admin' %}
+        <a class="s-item" href="{% url 'system_admin_create_owner' %}">
+            <div class="s-icon"><i class="fas fa-user-plus"></i></div>
+            Register Firm & Owner
+        </a>
+        <a class="s-item" href="{% url 'system_manage_firms' %}">
+            <div class="s-icon"><i class="fas fa-building"></i></div>
+            Manage Firms
+        </a>
+        <a class="s-item" href="{% url 'system_firm_details_list' %}">
+            <div class="s-icon"><i class="fas fa-list-alt"></i></div>
+            Firm Details
+        </a>
+        {% endif %}
+
+        {% if request.user.role == 'firm_owner' %}
+        <a class="s-item" href="{% url 'staff_list' %}">
+            <div class="s-icon"><i class="fas fa-people-group"></i></div>
+            Staff
+        </a>
+        <a class="s-item" href="{% url 'employee_bio_data' %}">
+            <div class="s-icon"><i class="fas fa-id-card-alt"></i></div>
+            Bio Data
+        </a>
+        <a class="s-item" href="{% url 'staff_create' %}">
+            <div class="s-icon"><i class="fas fa-user-shield"></i></div>
+            Add Staff
+        </a>
+        {% endif %}
+
+    </nav>
+
+    <div class="s-bottom">
+        <div class="s-user">
+            <div class="s-avatar">
+                {{ request.user.first_name|first|default:request.user.username|first|upper }}
+            </div>
+            <div>
+                <div class="s-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                <div class="s-user-role">{{ request.user.role|title }}</div>
+            </div>
+            <a href="{% url 'logout' %}" style="margin-left: auto; color: rgba(255,255,255,.3); transition: color .2s;">
+                <i class="fas fa-sign-out-alt"></i>
+            </a>
+        </div>
+    </div>
+</aside>
+
+<style>
+    /* ── NEW SIDEBAR STYLES ── */
+    .sidebar {
+        width: var(--sidebar-w);
+        background: var(--sidebar-bg);
+        display: flex;
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        z-index: 100;
+        overflow-y: auto;
+        border-right: 1px solid rgba(255, 255, 255, .05);
+    }
+
+    .s-firm-tag {
+        margin: 15px 16px;
+        background: rgba(255, 255, 255, .05);
+        border: 1px solid rgba(255, 255, 255, .08);
+        border-radius: 12px;
+        padding: 12px 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .s-firm-dot {
+        width: 8px;
+        height: 8px;
+        background: #22c55e;
+        border-radius: 50%;
+        box-shadow: 0 0 6px #22c55e;
+        flex-shrink: 0;
+    }
+
+    .s-firm-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .s-firm-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .s-firm-type {
+        font-size: 11px;
+        color: rgba(255, 255, 255, .4);
+        margin-top: 2px;
+    }
+
+    .s-nav {
+        flex: 1;
+        padding: 10px 14px;
+    }
+
+    .s-section {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, .25);
+        padding: 24px 12px 12px;
+    }
+
+    .s-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 14px;
+        border-radius: 10px;
+        color: rgba(255, 255, 255, .6);
+        font-size: 15px;
+        /* Increased size */
+        font-weight: 700;
+        /* Bold text */
+        cursor: pointer;
+        text-decoration: none;
+        transition: all .2s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 4px;
+        position: relative;
+    }
+
+    .s-item:hover {
+        background: rgba(255, 255, 255, .08);
+        color: #fff;
+        text-decoration: none;
+        transform: translateX(4px);
+    }
+
+    .s-item.active {
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.15), rgba(255, 255, 255, 0.03)) !important;
+        color: #fff !important;
+        border-left: 3px solid #fff !important;
+    }
+
+    .s-item.active .s-icon {
+        color: #fff !important;
+        background: rgba(255, 255, 255, 0.25) !important;
+    }
+
+    .s-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, .06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+        transition: all .2s;
+    }
+
+    .s-item:hover .s-icon {
+        background: rgba(255, 255, 255, .12);
+        color: #fff;
+    }
+
+    .s-bottom {
+        padding: 16px;
+        border-top: 1px solid rgba(255, 255, 255, .06);
+        background: var(--sidebar-bg);
+        position: sticky;
+        bottom: 0;
+    }
+
+    .s-user {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px;
+        border-radius: 12px;
+        transition: background .2s;
+    }
+
+    .s-user:hover {
+        background: rgba(255, 255, 255, .06);
+    }
+
+    .s-avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--crimson), var(--accent2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        font-weight: 800;
+        color: #fff;
+        flex-shrink: 0;
+        border: 2px solid rgba(255, 255, 255, .1);
+    }
+
+    .s-user-name {
+        font-size: 14px;
+        font-weight: 700;
+        color: #fff;
+    }
+
+    .s-user-role {
+        font-size: 12px;
+        color: rgba(255, 255, 255, .4);
+    }
+
+    /* Custom scrollbar */
+    .sidebar::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, .1);
+        border-radius: 10px;
+    }
+
+    /* ── SIDEBAR READABILITY OVERRIDES ── */
+    .s-firm-name {
+        font-size: 16px !important;
+    }
+    .s-firm-type {
+        font-size: 13px !important;
+    }
+    .s-section {
+        font-size: 13px !important;
+        letter-spacing: 2px !important;
+    }
+    .s-item {
+        font-size: 16px !important;
+    }
+    .s-user-name {
+        font-size: 16px !important;
+    }
+    .s-user-role {
+        font-size: 13px !important;
+    }
+</style>
+
+<script>
+    // Active link marking
+    document.addEventListener('DOMContentLoaded', function () {
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.s-item').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && currentPath === href) {
+                link.classList.add('active');
+            } else if (href && href !== '/' && currentPath.startsWith(href)) {
+                link.classList.add('active');
+            }
+        });
+    });
+</script>

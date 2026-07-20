@@ -1,0 +1,180 @@
+{% extends "base/auth_base.html" %}
+{% block title %}Firm Setup - Law Firm Management{% endblock %}
+
+{% block content %}
+<style>
+    body { background: linear-gradient(135deg,#0f172a 0%,#1e1b4b 50%,#0f172a 100%); min-height:100vh; }
+    .setup-wrap { max-width: 720px; margin: 0 auto; padding: 48px 20px; }
+
+    .setup-card {
+        background: #fff; border-radius: 20px;
+        box-shadow: 0 25px 60px rgba(0,0,0,.25);
+        overflow: hidden;
+    }
+    .setup-header {
+        background: linear-gradient(135deg,#b91c1c 0%,#1e3a8a 100%);
+        padding: 36px 40px; text-align: center; color: #fff;
+        position: relative; overflow: hidden;
+    }
+    .setup-header::before {
+        content:''; position:absolute; inset:0;
+        background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,.08) 0%, transparent 60%);
+    }
+    .setup-header h2 { font-size: 28px; font-weight: 800; margin: 12px 0 6px; position: relative; z-index:1; }
+    .setup-header p  { font-size: 14px; opacity: .8; margin: 0; position: relative; z-index:1; }
+    .setup-header-icon { width: 64px; height: 64px; border-radius: 18px; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto; position: relative; z-index:1; }
+
+    .setup-body { padding: 36px 40px; }
+
+    .section-title {
+        font-size: 13px; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 1.5px; color: #64748b;
+        margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+    }
+    .section-title i { color: #3b82f6; }
+    .section-title::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+
+    .field-group { margin-bottom: 18px; }
+    .field-label { font-size: 13px; font-weight: 600; color: #374151; margin-bottom: 7px; display:block; }
+    .field-hint  { font-size: 11px; color: #94a3b8; margin-top: 5px; }
+    .setup-input {
+        width: 100%; padding: 11px 14px;
+        border: 1.5px solid #e2e8f0; border-radius: 10px;
+        font-size: 14px; color: #1e293b; background: #f8fafc;
+        transition: border-color .2s, background .2s;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        box-sizing: border-box;
+    }
+    .setup-input:focus { border-color: #3b82f6; background: #fff; outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.12); }
+
+    .btn-create {
+        width: 100%; padding: 13px;
+        background: linear-gradient(135deg,#b91c1c,#1e3a8a);
+        border: none; border-radius: 12px; color: #fff;
+        font-size: 15px; font-weight: 700; cursor: pointer;
+        transition: opacity .2s, transform .2s;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .btn-create:hover { opacity: .92; transform: translateY(-1px); }
+
+    .divider { display: flex; align-items: center; gap: 14px; margin: 28px 0; }
+    .divider::before, .divider::after { content:''; flex:1; height:1px; background:#e2e8f0; }
+    .divider span { font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+
+    .firm-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+    .firm-card {
+        border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 16px;
+        transition: border-color .2s, box-shadow .2s;
+        display: flex; flex-direction: column; gap: 10px;
+    }
+    .firm-card:hover { border-color: #3b82f6; box-shadow: 0 4px 16px rgba(59,130,246,.1); }
+    .firm-card-name { font-size: 14px; font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 7px; }
+    .firm-card-meta { font-size: 11px; color: #64748b; display: flex; align-items: center; gap: 5px; }
+    .btn-join {
+        width: 100%; padding: 9px;
+        border: 1.5px solid #3b82f6; border-radius: 9px;
+        background: #eff6ff; color: #1d4ed8;
+        font-size: 12px; font-weight: 700; cursor: pointer;
+        text-decoration: none; text-align: center; display: block;
+        transition: background .2s, color .2s;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .btn-join:hover { background: #3b82f6; color: #fff; }
+
+    .help-box {
+        background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px;
+        padding: 20px 22px; margin-top: 28px;
+    }
+    .help-box h6 { font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+    .help-item { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 10px; font-size: 12px; color: #475569; }
+    .help-item:last-child { margin-bottom: 0; }
+    .help-dot { width: 7px; height: 7px; border-radius: 50%; background: #3b82f6; margin-top: 5px; flex-shrink: 0; }
+</style>
+
+<div class="setup-wrap">
+    <div class="setup-card">
+        <!-- Header -->
+        <div class="setup-header">
+            <div class="setup-header-icon"><i class="fas fa-building"></i></div>
+            <h2>Complete Your Setup</h2>
+            <p>Let's get your firm ready to manage cases</p>
+        </div>
+
+        <!-- Body -->
+        <div class="setup-body">
+
+            <!-- Create Firm -->
+            <div class="section-title"><i class="fas fa-plus-circle"></i> Create a New Firm</div>
+            <form method="post" id="createFirmForm">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="create_firm">
+                <div class="field-group">
+                    <label for="firmName" class="field-label">Firm Name <span style="color:#ef4444">*</span></label>
+                    <input type="text" class="setup-input" id="firmName" name="firm_name" placeholder="e.g., Smith & Associates Law Firm" required>
+                    <div class="field-hint">The official name of your law firm</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                    <div class="field-group">
+                        <label for="firmEmail" class="field-label">Firm Email</label>
+                        <input type="email" class="setup-input" id="firmEmail" name="firm_email" placeholder="info@yourfirm.com">
+                        <div class="field-hint">Official email address</div>
+                    </div>
+                    <div class="field-group">
+                        <label for="firmPhone" class="field-label">Firm Phone</label>
+                        <input type="tel" class="setup-input" id="firmPhone" name="firm_phone" placeholder="+92 300 1234567">
+                        <div class="field-hint">Main contact number</div>
+                    </div>
+                </div>
+                <button type="submit" class="btn-create">
+                    <i class="fas fa-check-circle me-2"></i> Create My Firm
+                </button>
+            </form>
+
+            {% if existing_firms %}
+            <!-- Divider -->
+            <div class="divider"><span>or</span></div>
+
+            <!-- Join Firm -->
+            <div class="section-title"><i class="fas fa-link"></i> Join Existing Firm</div>
+            <div class="firm-cards">
+                {% for firm in existing_firms %}
+                <div class="firm-card">
+                    <div class="firm-card-name">
+                        <i class="fas fa-briefcase" style="color:#3b82f6;font-size:13px"></i>
+                        {{ firm.name }}
+                    </div>
+                    {% if firm.email %}
+                    <div class="firm-card-meta"><i class="fas fa-envelope" style="font-size:10px"></i> {{ firm.email }}</div>
+                    {% endif %}
+                    {% if firm.phone %}
+                    <div class="firm-card-meta"><i class="fas fa-phone" style="font-size:10px"></i> {{ firm.phone }}</div>
+                    {% endif %}
+                    <a href="{% url 'join_firm' firm.id %}" class="btn-join">
+                        <i class="fas fa-user-plus me-1"></i> Join Firm
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Help -->
+            <div class="help-box">
+                <h6><i class="fas fa-question-circle" style="color:#3b82f6"></i> How It Works</h6>
+                <div class="help-item">
+                    <div class="help-dot"></div>
+                    <div><strong>Create a Firm:</strong> If you're starting a new law firm, fill in your details above. You'll become the firm owner with full access.</div>
+                </div>
+                <div class="help-item">
+                    <div class="help-dot" style="background:#10b981"></div>
+                    <div><strong>Join a Firm:</strong> If you're joining an existing firm, select it from the list. A firm admin can assign you a role later.</div>
+                </div>
+                <div class="help-item">
+                    <div class="help-dot" style="background:#7c3aed"></div>
+                    <div><strong>Manage Staff:</strong> Once set up, invite other lawyers, accountants, and staff to your firm.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

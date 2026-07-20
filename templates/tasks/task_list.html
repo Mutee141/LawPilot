@@ -1,0 +1,36 @@
+{% extends "base/dashboard_base.html" %}
+{% block content %}
+
+<h2>Tasks</h2>
+
+<a href="{% url 'task_create' %}" class="btn btn-primary mb-3">New Task</a>
+
+<table class="table table-bordered">
+<tr>
+    <th>Title</th>
+    <th>Case</th>
+    <th>Assigned</th>
+    <th>Status</th>
+    <th>Priority</th>
+    <th>Deadline</th>
+    <th>Actions</th>
+</tr>
+
+{% for task in tasks %}
+<tr>
+    <td>{{ task.title }}</td>
+    <td>{{ task.case.case_number }}</td>
+    <td>{{ task.assigned_to }}</td>
+    <td>{{ task.status }}</td>
+    <td>{{ task.priority }}</td>
+    <td>{{ task.deadline }}</td>
+    <td>
+        <a href="{% url 'task_update' task.id %}" class="btn btn-warning btn-sm">Edit</a>
+        <a href="{% url 'task_delete' task.id %}" class="btn btn-danger btn-sm">Delete</a>
+    </td>
+</tr>
+{% endfor %}
+
+</table>
+
+{% endblock %}
