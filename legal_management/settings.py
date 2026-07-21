@@ -13,9 +13,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 import os
 import dj_database_url
 from pathlib import Path
+from dotenv import load_dotenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -108,9 +110,12 @@ DATABASES = {
 
 # Print database status on startup for logs diagnostic
 if os.environ.get('DATABASE_URL'):
-    print("🚀 Django is connecting to PostgreSQL (DATABASE_URL is set).")
+    if os.environ.get('DATABASE_URL').startswith('sqlite'):
+        print("🚀 Django is connecting to SQLite (DATABASE_URL is set).")
+    else:
+        print("🚀 Django is connecting to PostgreSQL (DATABASE_URL is set).")
 else:
-    print("⚠️ DATABASE_URL is NOT set. Falling back to local SQLite.")
+    print("ℹ️ DATABASE_URL is NOT set. Using local SQLite.")
 
 
 # Password validation
