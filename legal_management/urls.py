@@ -14,6 +14,8 @@ urlpatterns = [
     path('', RedirectView.as_view(pattern_name='login'), name='home_redirect'),
 ]
 
+# Always serve media files (needed for production on Render)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
